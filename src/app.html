@@ -2395,13 +2395,13 @@ function renderParents(){
       <button class="cta sec2" data-a="backup-code">Sicherungscode anzeigen</button>
     </div>
     ${backupMsg ? `<p class="note ok-msg">${esc(backupMsg)}</p>` : ''}
-    ${backupCode ? `<textarea id="backupcode" class="codebox" readonly>${esc(backupCode)}</textarea><div class="row"><button class="cta sec2" data-a="copy-code">Code kopieren</button><span class="note">Speichern Sie den Code z.B. in einer Notiz oder senden Sie ihn sich per E-Mail.</span></div>` : ''}
+    ${backupCode ? `<textarea id="backupcode" class="codebox">${esc(backupCode)}</textarea><div class="row">${navigator.share ? '<button class="cta blue" data-a="share-code">Teilen (Notizen, E-Mail …)</button>' : ''}<button class="cta sec2" data-a="copy-code">Code kopieren</button></div><p class="note">Speichern Sie den ganzen Code, z.B. in der Notizen-App. Er beginnt mit «TL1:».</p>` : ''}
     <div class="label" style="margin-top:8px">Spielstand wiederherstellen</div>
     <div class="row">
       <label class="cta sec2 filebtn">Datei wählen<input id="restorefile" type="file" accept=".json,.txt,application/json,text/plain"></label>
     </div>
-    <textarea id="restorecode" class="codebox" placeholder="Oder Sicherungscode hier einfügen"></textarea>
-    <div class="row"><button class="cta sec2" data-a="restore-code">Code prüfen</button></div>
+    <textarea id="restorecode" class="codebox" placeholder="Oder Sicherungscode hier einfügen (lange auf das Feld tippen → Einsetzen)"></textarea>
+    <div class="row">${navigator.clipboard && navigator.clipboard.readText ? '<button class="cta sec2" data-a="paste-code">Aus Zwischenablage einfügen</button>' : ''}<button class="cta" data-a="restore-code">Code prüfen</button></div>
     ${restoreMsg ? `<p class="note err-msg">${esc(restoreMsg)}</p>` : ''}
     ${restoreCand ? `<div class="row"><span>Sicherung vom ${esc(new Date(restoreCand.savedAt).toLocaleString('de-CH'))} mit <b>${(restoreCand.data.ps||0).toLocaleString('de-CH')} PS</b> laden? Der aktuelle Stand wird ersetzt.</span><button class="cta" data-a="restore-yes">Ja, laden</button><button class="cta sec2" data-a="restore-no">Abbrechen</button></div>` : ''}
   </section>
@@ -2413,13 +2413,38 @@ function renderParents(){
 }
 
 /* ---------------- Sicherung ---------------- */
-function backupPayload(){ return {app:'TurboLearn', v:1, savedAt:Date.now(), data:JSON.parse(JSON.stringify(S))}; }
+function backupPayload(){
+  const d = JSON.parse(JSON.stringify(S));
+  Object.keys(d.items || {}).forEach(k => { const x = d.items[k]; if(!x.b && !x.r && !x.w) delete d.items[k]; });
+  return {app:'TurboLearn', v:1, savedAt:Date.now(), data:d};
+}
+function copyText(text){
+  return new Promise((ok, fail) => {
+    const legacy = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.left = '0'; ta.style.opacity = '0'; ta.style.fontSize = '16px';
+        document.body.appendChild(ta);
+        ta.contentEditable = 'true'; ta.readOnly = false;
+        const range = document.createRange(); range.selectNodeContents(ta);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        ta.setSelectionRange(0, text.length);
+        const done = document.execCommand('copy');
+        document.body.removeChild(ta);
+        done ? ok() : fail();
+      } catch(e){ fail(); }
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, legacy);
+    else legacy();
+  });
+}
 function encodeBackup(){ return 'TL1:' + btoa(unescape(encodeURIComponent(JSON.stringify(backupPayload())))); }
 function parseBackup(text){
   text = String(text||'').trim();
   try {
     let obj;
-    if(text.startsWith('TL1:')) obj = JSON.parse(decodeURIComponent(escape(atob(text.slice(4).replace(/\s+/g,'')))));
+    const m = text.replace(/\s+/g,'').match(/TL1:([A-Za-z0-9+\/=]+)/);
+    if(m) obj = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
     else obj = JSON.parse(text);
     if(!obj || obj.app !== 'TurboLearn' || !obj.data || typeof obj.data !== 'object') return null;
     return obj;
@@ -2485,9 +2510,15 @@ const A = {
   },
   'backup-code': () => { backupCode = encodeBackup(); backupMsg = ''; render(); },
   'copy-code': () => {
-    const ta = document.getElementById('backupcode');
-    const fallback = () => { if(ta){ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } backupMsg = 'Code markiert. Tippen Sie jetzt auf «Kopieren».'; render(); setTimeout(() => { const t = document.getElementById('backupcode'); if(t){ t.focus(); t.select(); t.setSelectionRange(0, t.value.length); } }, 50); };
-    try { navigator.clipboard.writeText(backupCode).then(() => { backupMsg = 'Code kopiert.'; render(); }, fallback); } catch(e){ fallback(); }
+    copyText(backupCode).then(() => { backupMsg = 'Code kopiert. Fügen Sie ihn jetzt z.B. in einer Notiz ein.'; render(); },
+      () => { backupMsg = 'Kopieren ging nicht automatisch. Tippen Sie lange auf den Code → «Alles auswählen» → «Kopieren».'; render(); });
+  },
+  'share-code': () => {
+    navigator.share({title:'TurboLearn-Sicherung', text:backupCode}).then(() => { backupMsg = 'Sicherung geteilt.'; render(); }).catch(() => {});
+  },
+  'paste-code': () => {
+    navigator.clipboard.readText().then(t => { const ta = document.getElementById('restorecode'); if(ta) ta.value = t; offerRestore(t); },
+      () => { restoreMsg = 'Einfügen ging nicht automatisch. Tippen Sie lange in das Feld → «Einsetzen».'; render(); });
   },
   'restore-code': () => offerRestore((document.getElementById('restorecode')||{}).value),
   'restore-no': () => { restoreCand = null; render(); },
