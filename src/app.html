@@ -1,0 +1,2561 @@
+<title>TurboLearn</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: Cockpit-Dashboard. Oben Instrumente (PS, Serie, Tagesziel), darunter Units und Fahrmodi. Eine Spalte auf dem Handy. */
+:root{
+  --bg:#07090d;
+  --panel:#10141c;
+  --panel-2:#171c27;
+  --line:#262e3d;
+  --fg:#f3f5f9;
+  --muted:#8e97ab;
+  --orange:#ff7a00;
+  --orange-2:#ffa246;
+  --blue:#2f6dff;
+  --blue-deep:#0c2a6e;
+  --good:#22c77a;
+  --bad:#ff4b5c;
+  --display:'Chakra Petch','Arial Narrow',system-ui,sans-serif;
+  --body:'Lexend',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --cut:14px;
+  --r-lg:22px;
+  --r-md:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(47,109,255,.18), transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, rgba(255,122,0,.10), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 6px),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--fg);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;
+}
+#app{
+  max-width:1000px;margin:0 auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:16px 40px;
+  display:flex;flex-direction:column;gap:20px;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:3px solid var(--orange-2);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.02em}
+.label{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--muted);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+
+/* Top bar */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-family:var(--display);font-weight:700;font-style:italic;font-size:30px;letter-spacing:.01em;line-height:1;margin-right:auto;display:flex;align-items:center;gap:10px}
+.logo{padding:0;text-align:left}
+.logo .t{color:var(--orange)}
+.logo .l{color:var(--blue)}
+.logo svg{width:34px;height:34px}
+.pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);padding:8px 14px;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);font-family:var(--display);font-weight:700;font-size:18px}
+.pill svg{width:20px;height:20px;flex:none}
+.pill small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--muted)}
+.icon-btn{width:46px;height:46px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+.icon-btn svg{width:22px;height:22px}
+
+/* Panels */
+.panel{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut));padding:20px}
+.hero{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:20px;align-items:center}
+.gauge{width:100%;max-width:260px;display:block;margin:0 auto}
+.hero-right{display:flex;flex-direction:column;gap:14px;min-width:0}
+.hero-car{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hero-car .car{width:220px;max-width:100%}
+.next{display:flex;flex-direction:column;gap:6px}
+.bar{height:12px;background:var(--bg);border:1px solid var(--line);position:relative;overflow:hidden;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--orange),var(--orange-2));transition:width .6s}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);background:var(--bg);font-size:14px}
+.chip b{font-family:var(--display);font-size:16px}
+.chip.ok{border-color:var(--good);color:var(--good)}
+.chip svg{width:18px;height:18px}
+
+/* Section heads */
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec h2{font-size:22px;text-transform:uppercase}
+.tabs{display:flex;gap:8px}
+.tab{padding:8px 16px;font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:14px;border:1px solid var(--line);background:var(--panel);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.tab.on{background:var(--blue);border-color:var(--blue)}
+.tab:disabled{opacity:.45;cursor:default}
+
+/* Units */
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.unit{text-align:left;display:flex;flex-direction:column;gap:10px;position:relative;border:2px solid var(--line)}
+.unit.on{border-color:var(--orange);background:linear-gradient(180deg,rgba(255,122,0,.12),var(--panel))}
+.unit .check{position:absolute;top:14px;right:16px;width:28px;height:28px;border:2px solid var(--line);display:grid;place-items:center}
+.unit.on .check{background:var(--orange);border-color:var(--orange)}
+.unit .check svg{width:18px;height:18px;opacity:0}
+.unit.on .check svg{opacity:1}
+.unit h3{font-size:26px;font-style:italic}
+.unit p{margin:0;color:var(--muted);font-size:14px}
+.gears{display:flex;gap:6px;align-items:center}
+.gears span{width:26px;height:10px;background:var(--line);clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+.gears span.f{background:var(--orange)}
+.gears em{font-style:normal;font-size:13px;color:var(--muted);margin-left:6px}
+
+/* Modes */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.mode{display:flex;flex-direction:column;gap:6px;text-align:left;min-height:120px;justify-content:flex-end;position:relative;overflow:hidden}
+.mode svg.mi{position:absolute;top:16px;right:16px;width:40px;height:40px;opacity:.9}
+.mode b{font-family:var(--display);font-size:21px;text-transform:uppercase;letter-spacing:.04em}
+.mode span{font-size:14px;color:var(--muted)}
+.mode.main{grid-column:span 3;min-height:130px;background:linear-gradient(110deg,var(--orange) 0%,#ff5a00 55%,var(--blue-deep) 140%);border-color:transparent}
+.mode.main b{font-size:32px;font-style:italic}
+.mode.main span{color:rgba(255,255,255,.88);font-size:16px}
+.mode:disabled{opacity:.5;cursor:default}
+
+/* Einfacher Start */
+.icon-btn.ghost{background:none;border-color:transparent;opacity:.7}
+.hero2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:center}
+.carbtn{padding:0;display:block;width:100%}
+.carbtn .car{width:100%;max-width:440px;display:block;margin:0 auto}
+.hero-info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hero-info h2{font-size:clamp(30px,4.5vw,42px);font-style:italic}
+.bar.big{height:18px}
+.status{font-size:15px;color:var(--muted)}
+.status.ok{color:var(--good)}
+.units2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.dolphin{width:100%;max-width:680px;display:block;margin:0 auto}
+.dolphin .mk circle{fill:var(--panel-2);stroke:var(--muted);stroke-width:2}
+.dolphin .mk text{fill:var(--fg);font:700 16px var(--display)}
+.dolphin .mk.hl circle{fill:var(--orange);stroke:var(--orange)}
+.dolphin .mk.hl text{fill:#140800}
+.dolphin .mk.ok circle{fill:var(--good);stroke:var(--good)}
+.dolphin .mk.no circle{fill:var(--bad);stroke:var(--bad)}
+.dolphin .mk[data-a]{cursor:pointer}
+.dolphin .mk[data-a] circle{stroke:var(--blue);stroke-width:3}
+.opt.long{font-size:17px;text-align:left;line-height:1.35}
+.factlist{text-align:left;margin:0;padding-left:22px;font-size:20px;display:flex;flex-direction:column;gap:8px;max-width:640px}
+.sbadge{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:5px 12px 5px 8px;border-radius:999px;font:700 13px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.sbadge svg{width:18px;height:18px}
+.ucard .label{margin-top:-2px}
+.cta.small{padding:9px 14px;font-size:14px}
+.gbtns{gap:8px}
+.qbanner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.qbanner div{display:flex;flex-direction:column;gap:2px}
+.qbanner b{font-family:var(--display);font-size:22px;font-style:italic}
+.paints{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:720px}
+.pchip{display:flex;flex-direction:column;gap:6px;align-items:center;padding:6px;border:2px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);font-size:13px;color:var(--muted)}
+.pchip img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px}
+.pchip.on{border-color:var(--orange);color:var(--fg)}
+.pchip.lock img{filter:grayscale(1) brightness(.35)!important}
+.qscore{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-size:20px}
+.qscore b{font-size:30px;color:var(--orange-2)}
+.qboard{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.qcardx{background:var(--panel);border:2px solid var(--line);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.qcardx.back{display:grid;place-items:center;min-height:320px;background:linear-gradient(135deg,var(--blue-deep),var(--panel))}
+.qback{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);font-family:var(--display);text-transform:uppercase;letter-spacing:.12em}
+.qback svg{width:72px;height:72px}
+.qname{display:flex;flex-direction:column;gap:2px}
+.qname b{font-family:var(--display);font-size:22px;font-style:italic}
+.qlock{font-size:12px;color:var(--muted)}
+.qstats{display:flex;flex-direction:column;gap:6px}
+.qstat{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--panel-2);text-align:left;font-size:15px}
+.qstat small{color:var(--muted);font-size:11px}
+.qstat b{font-family:var(--display);font-size:18px;white-space:nowrap}
+.qstat[data-a]{border-color:var(--blue)}
+.qstat.win{border-color:var(--good);background:rgba(34,199,122,.16)}
+.qstat.lose{border-color:var(--bad);background:rgba(255,75,92,.16)}
+.qstat.tie{border-color:var(--orange)}
+.qmsg{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.qmsg p{margin:0;font-size:18px}
+@media (max-width:620px){ .qboard{grid-template-columns:1fr} .paints{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.mvis{width:100%;display:flex;justify-content:center}
+.hze{height:110px;max-width:100%}
+.numline{width:100%;max-width:640px}
+.geo{width:200px;max-width:60%;height:auto}
+.opt.pic .geo{width:110px;max-width:100%}
+.mark{color:var(--orange);text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:8px}
+.stones{display:inline-flex;gap:10px}
+.stones i{width:34px;height:34px;border-radius:50%;display:block;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.lt{font:700 26px var(--display);color:var(--muted);align-self:center}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pcell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:130px;padding:18px 10px 14px;background:var(--panel);border:2px solid var(--line);border-radius:var(--r-md);text-align:center}
+.pcell b{font-size:clamp(18px,2.6vw,24px);overflow-wrap:anywhere}
+.pcell .pn{position:absolute;top:8px;left:12px;font:700 14px var(--display);color:var(--muted)}
+.pcell .pimg{font-size:34px;line-height:1}
+.pcell .pans{font-size:clamp(17px,2.4vw,22px);color:var(--orange-2);font-weight:600;overflow-wrap:anywhere}
+.pcell[data-a]{border-color:var(--blue);cursor:pointer}
+.pcell.ok{border-color:var(--good);background:rgba(34,199,122,.14)}
+.pcell .pchk{position:absolute;top:6px;right:12px;color:var(--good);font-size:22px;font-weight:700}
+.pcell:disabled{opacity:1;cursor:default}
+@media (max-width:520px){ .pgrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.subj{display:flex;flex-direction:column;gap:10px}
+.subj-h{font-size:15px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+.chips-sent{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.wchip{padding:12px 16px;font-size:24px;font-weight:600;background:var(--panel-2);border:2px solid var(--line);border-radius:12px}
+.wchip.sel{background:rgba(47,109,255,.25);border-color:var(--blue)}
+.wchip.ok{background:rgba(34,199,122,.18);border-color:var(--good)}
+.wchip.no{background:rgba(255,75,92,.18);border-color:var(--bad)}
+.blank{display:inline-block;min-width:2.2em;border-bottom:4px solid var(--orange);color:transparent}
+.persgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;margin-bottom:-8px}
+.opt.pers{font-size:19px}
+.ucard{position:relative;display:flex;flex-direction:column;gap:8px;text-align:left;padding:18px 20px;background:var(--panel);border:2px solid var(--line);clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+.ucard.on{border-color:var(--orange);background:linear-gradient(180deg,rgba(255,122,0,.14),var(--panel))}
+.ucard b{font-family:var(--display);font-size:clamp(22px,3.4vw,30px);font-style:italic;padding-right:36px}
+.ucard .check{position:absolute;top:16px;right:16px;width:30px;height:30px;border:2px solid var(--line);display:grid;place-items:center}
+.ucard.on .check{background:var(--orange);border-color:var(--orange)}
+.ucard .check svg{width:18px;height:18px;opacity:0}
+.ucard.on .check svg{opacity:1}
+.ucard .bar{height:8px}
+.go{display:flex;flex-direction:column;align-items:center;gap:2px;padding:26px 20px;background:linear-gradient(110deg,var(--orange),#ff5a00);color:#140800;clip-path:polygon(22px 0,100% 0,calc(100% - 22px) 100%,0 100%)}
+.go b{font-family:var(--display);font-weight:700;font-style:italic;font-size:clamp(48px,9vw,72px);line-height:1;text-transform:uppercase;letter-spacing:.02em}
+.go span{font-weight:600;font-size:18px}
+.go:disabled{opacity:.45;cursor:default}
+.more-toggle{align-self:center;padding:10px 18px;color:var(--muted);font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:14px;border-bottom:2px solid var(--line)}
+.modes .mode{min-height:96px}
+.modes .mode svg.mi{width:34px;height:34px}
+
+/* Play screen */
+.play-top{display:flex;align-items:center;gap:14px}
+.segs{flex:1;display:flex;gap:4px}
+.segs span{flex:1;height:14px;background:var(--panel-2);border:1px solid var(--line);clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}
+.segs span.ok{background:var(--good);border-color:var(--good)}
+.segs span.no{background:var(--bad);border-color:var(--bad)}
+.segs span.cur{background:var(--orange);border-color:var(--orange)}
+.qcard{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:28px 20px;min-height:220px;justify-content:center}
+.qhint{font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:14px;color:var(--orange-2);font-weight:600}
+.qtext{font-family:var(--display);font-weight:700;font-size:clamp(30px,5.5vw,52px);line-height:1.1;overflow-wrap:anywhere}
+.qtext.de{color:var(--fg)}
+.qimg{font-size:72px;line-height:1}
+.speak{display:inline-flex;align-items:center;gap:10px;padding:12px 20px;background:var(--blue);font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+.speak svg{width:24px;height:24px}
+.speak.big{padding:22px 34px;font-size:20px}
+.speak.big svg{width:36px;height:36px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.opt{padding:20px 16px;font-size:22px;font-weight:600;background:var(--panel-2);border:2px solid var(--line);min-height:76px;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);overflow-wrap:anywhere}
+.opt.pic{font-size:56px;padding:10px}
+.opt.ok{background:rgba(34,199,122,.18);border-color:var(--good)}
+.opt.no{background:rgba(255,75,92,.18);border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.slots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:62px;align-items:center}
+.slot{width:48px;height:58px;border-bottom:3px solid var(--muted);display:grid;place-items:center;font-size:30px;font-weight:600;font-family:var(--body)}
+.slot.f{border-color:var(--orange)}
+.slot.gap{width:18px;border:0}
+.slot.fixed{border:0;color:var(--muted)}
+.tiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.tile{min-width:56px;height:60px;padding:0 14px;font-size:28px;font-weight:600;background:var(--panel-2);border:2px solid var(--line);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.tile.word{font-size:22px}
+.tile.used{visibility:hidden}
+.sentence{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:68px;padding:10px;border-bottom:3px solid var(--muted);width:100%}
+.sentence .tile{border-color:var(--orange)}
+.type-in{width:100%;max-width:520px;font:600 32px var(--body);text-align:center;padding:16px;background:var(--bg);color:var(--fg);border:2px solid var(--line);user-select:text;-webkit-user-select:text}
+.type-in:focus{border-color:var(--orange);outline:none}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.cta{padding:16px 32px;font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.06em;background:var(--orange);color:#140800;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.cta.sec2{background:var(--panel-2);color:var(--fg);border:1px solid var(--line)}
+.cta.blue{background:var(--blue);color:#fff}
+.cta:disabled{opacity:.4;cursor:default}
+.fb{position:sticky;bottom:0;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between;padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));border-top:3px solid var(--good);background:#0c1a14}
+.fb.no{border-color:var(--bad);background:#1c0d10}
+.fb h3{font-size:24px}
+.fb p{margin:2px 0 0;font-size:18px}
+.fb .ps{font-family:var(--display);font-weight:700;color:var(--orange-2);font-size:24px}
+.turbo{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) skewX(-10deg);font-family:var(--display);font-weight:700;font-style:italic;font-size:clamp(36px,8vw,72px);color:var(--orange);text-shadow:0 0 30px rgba(255,122,0,.6);pointer-events:none;animation:pop 1.1s ease-out forwards;z-index:20;white-space:nowrap}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) skewX(-10deg) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) skewX(-10deg) scale(1.08)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) skewX(-10deg) scale(1)}}
+
+/* Memory */
+.mem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+table.conj{font-size:24px;border-collapse:collapse;margin:0 auto}
+table.conj td{padding:8px 18px;border-bottom:1px solid var(--line);text-align:left}
+table.conj b{color:var(--orange-2)}
+.mcard{aspect-ratio:4/3;max-width:100%;font-size:19px;font-weight:600;display:grid;place-items:center;padding:8px;background:linear-gradient(135deg,var(--blue-deep),var(--panel));border:2px solid var(--line);overflow-wrap:anywhere;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.mcard .back{width:38px;height:38px;opacity:.7}
+.mcard.open{background:var(--panel-2);border-color:var(--orange)}
+.mcard.en.open{color:var(--orange-2)}
+.mcard.done{background:rgba(34,199,122,.14);border-color:var(--good);opacity:.75}
+
+/* Flashcard */
+.flash{min-height:260px;cursor:pointer}
+
+/* Garage */
+.garage{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.gcar{display:flex;flex-direction:column;gap:8px}
+.gcar .car{width:100%}
+.gcar h3{font-size:22px;font-style:italic}
+.gcar.lock h3{color:var(--muted)}
+.gcar .meta{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
+.gcar.mine{border:2px solid var(--orange)}
+.badge{font-family:var(--display);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.1em;background:var(--orange);color:#140800;padding:3px 8px}
+
+/* End */
+.end{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 20px}
+.end h2{font-size:clamp(32px,6vw,48px);font-style:italic}
+.end .big{font-family:var(--display);font-weight:700;font-size:56px;color:var(--orange)}
+.end .car{width:min(420px,100%)}
+.stats3{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* Parents */
+.pinpad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center}
+.pinpad button{height:64px;font-family:var(--display);font-weight:700;font-size:26px;background:var(--panel-2);border:1px solid var(--line)}
+.dots{display:flex;gap:14px;justify-content:center}
+.dots i{width:18px;height:18px;border:2px solid var(--muted);transform:rotate(45deg)}
+.dots i.f{background:var(--orange);border-color:var(--orange)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--display);font-size:30px}
+.goals{display:flex;flex-direction:column;gap:10px}
+.goal{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.goal p{margin:0;font-size:15px}
+.goal small{color:var(--orange-2);font-family:var(--display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted)}
+.lvl{display:inline-flex;gap:3px}
+.lvl i{width:10px;height:10px;background:var(--line)}
+.lvl i.f{background:var(--orange)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.note{font-size:14px;color:var(--muted);margin:0}
+.toggle{display:flex;align-items:center;gap:12px;padding:10px 0}
+.sw{width:58px;height:32px;background:var(--line);position:relative;border-radius:16px;flex:none}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--fg);transition:left .2s}
+.sw.on{background:var(--orange)}
+.sw.on::after{left:30px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.codebox{width:100%;min-height:90px;font:13px/1.4 ui-monospace,Menlo,monospace;background:var(--bg);color:var(--fg);border:1px solid var(--line);padding:10px;user-select:text;-webkit-user-select:text;word-break:break-all}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.ok-msg{color:var(--good)}
+.err-msg{color:var(--bad)}
+.mic{width:120px;height:120px;border-radius:50%;background:var(--bad);display:grid;place-items:center;box-shadow:0 0 0 0 rgba(255,75,92,.6)}
+.mic svg{width:52px;height:52px}
+.mic.live{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,75,92,.55)}100%{box-shadow:0 0 0 26px rgba(255,75,92,0)}}
+
+@media (max-width:720px){
+  .hero{grid-template-columns:1fr}
+  .hero2{grid-template-columns:1fr}
+  .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mode.main{grid-column:span 2}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols2{grid-template-columns:1fr}
+  .mem{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mcard{font-size:16px}
+}
+@media (max-width:420px){
+  .opts{grid-template-columns:1fr}
+  .units2{grid-template-columns:1fr}
+  .logo{font-size:24px}
+}
+img.car.photo{width:100%;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-md);display:block;background:var(--bg)}
+img.car.locked{filter:grayscale(1) brightness(.25) blur(2px)}
+.carbtn img.car.photo{max-width:480px}
+/* Abgerundete Ecken */
+.pill,.icon-btn,.panel,.bar,.bar i,.tab,.gears span,.segs span,.speak,.opt,.tile,.cta,.mcard,.ucard,.go{clip-path:none!important}
+.panel,.ucard,.mode.main{border-radius:var(--r-lg)}
+.go{border-radius:24px;box-shadow:0 10px 30px rgba(255,106,0,.25)}
+.opt,.cta,.speak,.tile,.mcard,.icon-btn,.tab,.pinpad button,.fb{border-radius:var(--r-md)}
+.pill,.chip,.bar,.bar i,.gears span,.segs span,.more-toggle{border-radius:999px}
+.more-toggle{border:1px solid var(--line);padding:10px 22px}
+.check{border-radius:9px}
+.badge{border-radius:6px}
+.type-in,.codebox{border-radius:12px}
+.slot{border-radius:4px}
+.dots i{border-radius:50%;transform:none}
+.ucard .check,.unit .check{border-radius:9px}
+.ucard{overflow:hidden}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div id="app"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------------- Inhalte ---------------- */
+function mk(unit, rows){
+  return rows.map(r => ({
+    id: unit + '-' + r[0].toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+    unit, en:r[0], de:r[1], img:r[2]||'', kind:r[3]||'word', group:r[4]||'', deAlt:r[5]||null
+  }));
+}
+const UNITS = [
+  { id:'u2', subject:'Englisch', name:'Unit 2', title:'My family', sub:'Familie, Alter, Zahlen 1–100, Bewegungen', numbers:true,
+    items: mk('u2', [
+      ['brother','Bruder','👦','word','family'],
+      ['sister','Schwester','👧','word','family'],
+      ['aunt','Tante','','word','family'],
+      ['uncle','Onkel','','word','family'],
+      ['mum','Mama','👩','word','family'],
+      ['dad','Papa','👨','word','family'],
+      ['grandma','Oma','👵','word','family'],
+      ['grandpa','Opa','👴','word','family'],
+      ['arms up','Arme nach oben','🙌','action','move'],
+      ['arms down','Arme nach unten','👇','action','move'],
+      ['clap','klatschen','👏','action','move'],
+      ['dance','tanzen','💃','action','move'],
+      ['left','links','⬅️','action','move'],
+      ['right','rechts','➡️','action','move'],
+      ['turn around','umdrehen','🔄','action','move'],
+      ['How old are you?','Wie alt bist du?','','phrase','talk'],
+      ["I'm 9 years old.",'Ich bin 9 Jahre alt.','','phrase','talk'],
+      ['My favourite colour is blue.','Meine Lieblingsfarbe ist Blau.','🔵','phrase','colour'],
+    ])
+  },
+  { id:'u3', subject:'Englisch', name:'Unit 3', title:'Happy birthday', sub:'Geburtstag, Monate, Geschenke, Dankesbrief',
+    items: mk('u3', [
+      ['a ball','ein Ball','⚽','word','things'],
+      ['a cake','ein Kuchen','🎂','word','things'],
+      ['a calendar','ein Kalender','📅','word','things'],
+      ['candles','Kerzen','🕯️','word','things'],
+      ['a card','eine Karte','💌','word','things'],
+      ['a dog','ein Hund','🐶','word','things'],
+      ['a jumper','ein Pulli','','word','things'],
+      ['a kitten','ein Kätzchen','🐱','word','things'],
+      ['a present','ein Geschenk','🎁','word','things'],
+      ['a skateboard','ein Rollbrett','🛹','word','things'],
+      ['a jacket','eine Jacke','🧥','word','got'],
+      ['a school bag','eine Schultasche','🎒','word','got'],
+      ['a book','ein Buch','📕','word','got'],
+      ['a pencil','ein Bleistift','✏️','word','got'],
+      ["I've got a skateboard.",'Ich habe ein Rollbrett.','🛹','phrase','got'],
+      ["I've got a jacket.",'Ich habe eine Jacke.','🧥','phrase','got'],
+      ["I've got a school bag.",'Ich habe eine Schultasche.','🎒','phrase','got'],
+      ["I've got a book.",'Ich habe ein Buch.','📕','phrase','got'],
+      ["I've got a pencil.",'Ich habe einen Bleistift.','✏️','phrase','got'],
+      ['January','Januar','','word','months'],
+      ['February','Februar','','word','months'],
+      ['March','März','','word','months'],
+      ['April','April','','word','months'],
+      ['May','Mai','','word','months'],
+      ['June','Juni','','word','months'],
+      ['July','Juli','','word','months'],
+      ['August','August','','word','months'],
+      ['September','September','','word','months'],
+      ['October','Oktober','','word','months'],
+      ['November','November','','word','months'],
+      ['December','Dezember','','word','months'],
+      ['Happy birthday!','Alles Gute zum Geburtstag!','🎉','phrase','birthday'],
+      ['When is your birthday?','Wann ist dein Geburtstag?','','phrase','birthday'],
+      ['My birthday is in March.','Mein Geburtstag ist im März.','','phrase','birthday'],
+      ['Thank you for my jumper.','Danke für meinen Pulli.','','phrase','letter'],
+      ["It's nice!",'Es ist nett!','','phrase','letter',['Es ist toll!']],
+      ["It's fantastic!",'Es ist fantastisch!','','phrase','letter'],
+      ["It's beautiful!",'Es ist schön!','','phrase','letter'],
+      ["It's great!",'Es ist grossartig!','','phrase','letter'],
+      ["It's big.",'Es ist gross.','','phrase','letter'],
+      ["It's small.",'Es ist klein.','','phrase','letter'],
+      ['Close your eyes.','Schliess deine Augen.','🙈','action','command'],
+      ['Sit down.','Setz dich hin.','🪑','action','command'],
+    ])
+  }
+];
+/* ---------------- Deutsch: Verben ---------------- */
+const DE_PRON = ['ich','du','er','wir','ihr','sie'];
+const DE_PRON_SHOW = ['ich','du','er/sie/es','wir','ihr','sie (alle)'];
+const DE_PERS = ['1. P. Einzahl','2. P. Einzahl','3. P. Einzahl','1. P. Mehrzahl','2. P. Mehrzahl','3. P. Mehrzahl'];
+function conjRegular(inf){
+  if(/eln$/.test(inf)){ const base = inf.slice(0,-1); return [inf.slice(0,-3)+'le', base+'st', base+'t', inf, base+'t', inf]; }
+  if(/ern$/.test(inf)){ const base = inf.slice(0,-1); return [base+'e', base+'st', base+'t', inf, base+'t', inf]; }
+  const stem = inf.replace(/e?n$/,'');
+  if(/[td]$/.test(stem) || /ch[mn]$/.test(stem) || /[^aeiouäöülrmnh][mn]$/.test(stem)) return [stem+'e', stem+'est', stem+'et', inf, stem+'et', inf];
+  if(/[sßzx]$/.test(stem)) return [stem+'e', stem+'t', stem+'t', inf, stem+'t', inf];
+  return [stem+'e', stem+'st', stem+'t', inf, stem+'t', inf];
+}
+const DE_REG = ('lachen suchen schreiben kochen sammeln trennen schimpfen schlottern schneiden trösten lernen bitten stimmen baden holen denken singen leben fragen weinen springen pfeifen üben turnen zeichnen teilen bleiben hüpfen warten rechnen wetten schnappen wohnen kleben flüstern klatschen kommen beobachten rennen spielen fliegen keuchen prellen schütteln verstecken rascheln forschen plaudern rütteln schleppen packen stören jammern klemmen grüssen drücken schaffen gehen husten malen fegen rufen rollen stehen hoffen stellen behaupten kennen antworten trinken tanzen brauchen sagen hören sitzen zittern kratzen schwitzen spritzen plappern schlucken schicken trommeln murren bellen flitzen bauen spitzen stecken binden füllen hüten zeigen erzeugen schreien stürzen schliessen putzen pumpen flicken bremsen befestigen basteln besuchen finden machen stolpern winken regnen').split(' ');
+const DE_IRR = {
+  laufen:'laufe läufst läuft laufen lauft laufen', raten:'rate rätst rät raten ratet raten', geben:'gebe gibst gibt geben gebt geben',
+  halten:'halte hältst hält halten haltet halten', tragen:'trage trägst trägt tragen tragt tragen', fangen:'fange fängst fängt fangen fangt fangen',
+  blasen:'blase bläst bläst blasen blast blasen', graben:'grabe gräbst gräbt graben grabt graben', brechen:'breche brichst bricht brechen brecht brechen',
+  helfen:'helfe hilfst hilft helfen helft helfen', werden:'werde wirst wird werden werdet werden', werfen:'werfe wirfst wirft werfen werft werfen',
+  treffen:'treffe triffst trifft treffen trefft treffen', messen:'messe misst misst messen messt messen', stechen:'steche stichst sticht stechen stecht stechen',
+  lesen:'lese liest liest lesen lest lesen', nehmen:'nehme nimmst nimmt nehmen nehmt nehmen', sehen:'sehe siehst sieht sehen seht sehen',
+  sprechen:'spreche sprichst spricht sprechen sprecht sprechen', schlafen:'schlafe schläfst schläft schlafen schlaft schlafen',
+  waschen:'wasche wäschst wäscht waschen wascht waschen', essen:'esse isst isst essen esst essen', fahren:'fahre fährst fährt fahren fahrt fahren',
+  fallen:'falle fällst fällt fallen fallt fallen',
+};
+const DE_HS = { haben:'habe hast hat haben habt haben', sein:'bin bist ist sind seid sind' };
+const DE_MOD = { dürfen:'darf darfst darf dürfen dürft dürfen', können:'kann kannst kann können könnt können', mögen:'mag magst mag mögen mögt mögen',
+  müssen:'muss musst muss müssen müsst müssen', sollen:'soll sollst soll sollen sollt sollen', wollen:'will willst will wollen wollt wollen' };
+const DE_FIND = [
+  'Ich *springe* nach Hause.','Heute Nachmittag *hüte* ich meinen kleinen Bruder.','Mein Bruder *schreit*.','Ich *zeige* die Rassel und *erzeuge* Töne.',
+  'Da *lacht* der kleine Bruder herzlich.','Hannes *besucht* mit seiner Klasse den Zirkus in Rapperswil.','Die Artisten *zeigen* tolle Nummern.',
+  'Besonders die Affen *finden* die Schüler spannend.','Der dumme August *macht* lustige Sachen.','Er *stolpert* über seine grossen Füsse.',
+  'Alle Zuschauer *lachen* herzhaft.','Nach der Pause *kommt* ein schwerer Elefant in die Arena.','Mit dem langen Rüssel *winkt* er uns.',
+  'Heute *gehen* wir in den Wald.','Pius *baut* eine Hütte.','Ihr *sucht* viele Stecken.','Mit dem Messer *spitzt* du die Stecken.',
+  'Silvia und Claudia *holen* Schnüre.','Wir *stecken* die Stäbe in den Boden.','Du *bindest* die Schnur.','Ihr *füllt* die Zwischenräume mit Ästen.',
+  'Ich *kann* heute nicht zu dir *kommen*.','Er *will* nichts *essen*.','Ihr *sollt* im Schulzimmer Finken *tragen*.','*Willst* du zu mir *kommen*?',
+  '*Wollt* ihr eine Wurst am Feuer *braten*?','Ihr *könnt* mit dem Hund im Garten *spielen*.','Nach der Schule *müssen* wir die Hausaufgaben *erledigen*.',
+  'Du *darfst* mit deiner Freundin den Zirkus *besuchen*.','Es *regnet*.','Silvan und ich *wollen* heute eine Rakete *basteln*.',
+  'Dazu *brauchen* wir eine Kartonrolle.','Wir *schneiden* und *kleben*.','Silvan *will* den Bleistift *spitzen*.','Die Spitze *bricht* immer wieder.',
+  'Das *ist* aber Pech.','Er *nimmt* dazu eine Farbe.'
+];
+const DE_END = [
+  ['Ich fahr','mit dem Velo in die Schule.','e'],['Du brauch','unbedingt einen Velohelm.','st'],['Auf der Strasse müss','ihr sehr gut aufpassen.','t'],
+  ['Paul stürz','noch oft beim Radfahren.','t'],['Ich bleib','immer auf dem Velostreifen.','e'],['Er schliess','sein Velo ab.','t'],
+  ['Am Nachmittag putz','wir unsere Räder.','en'],['Ich pump','das Vorderrad.','e'],['Meine Schwester flick','das Rücklicht.','t'],
+  ['Wir brems','in den Kurven.','en'],['Ihr könn','die Kette ölen.','t'],['Ich befestig','meinen Flaschenhalter.','e'],
+];
+const DE_CLOZE = [
+  ['Wir ___ den Korb in den Keller.','tragen','tragen'],['Er ___ den schweren Rucksack.','tragen','trägt'],['Ihr ___ die Bücher in die Bibliothek.','tragen','tragt'],
+  ['Susi ___ dem Vater im Garten.','helfen','hilft'],['Ihr ___ der Lehrerin beim Aufräumen.','helfen','helft'],['Ich ___ der Schwester bei den Hausaufgaben.','helfen','helfe'],
+  ['Ihr ___ die Hände mit Seife.','waschen','wascht'],['Wir ___ unser Gesicht mit kaltem Wasser.','waschen','waschen'],['Die Mutter ___ die Kleider.','waschen','wäscht'],
+  ['Im Unterricht ___ du leise mit deinem Freund.','sprechen','sprichst'],['Ihr ___ zu wenig deutlich.','sprechen','sprecht'],['Wir ___ über unsere Ferienpläne.','sprechen','sprechen'],
+  ['Du ___ einen spannenden Film.','sehen','siehst'],['Er ___ das letzte Stück vom Kuchen.','nehmen','nimmt'],['Du ___ einen aufregenden Krimi.','lesen','liest'],
+  ['Du ___ eine Regenjacke mit.','nehmen','nimmst'],['Er ___ einen Adler über der Schlucht.','sehen','sieht'],
+  ['Er ___ heute ins Kino gehen.','wollen','will'],['___ du mich ärgern?','wollen','Willst'],['Wir ___ diese Aufgaben nicht lösen.','wollen','wollen'],
+  ['Ich ___ freihändig Velo fahren.','können','kann'],['Du ___ das Buch behalten.','können','kannst'],['Ihr ___ alleine ins Hallenbad gehen.','können','könnt'],
+  ['Wir ___ heute im Zelt schlafen.','dürfen','dürfen'],['___ ich bei dir übernachten?','dürfen','Darf'],['Du ___ die Kerze ausblasen.','dürfen','darfst'],
+  ['Ihr ___ einen Velohelm tragen.','müssen','müsst'],['Wir ___ den Boden wischen.','müssen','müssen'],['Ich ___ noch schnell telefonieren.','müssen','muss'],
+  ['Ich ___ keine Lust.','haben','habe'],['Ihr ___ Hunger.','haben','habt'],['Du ___ Halsweh.','haben','hast'],['Wir ___ Angst.','haben','haben'],['Er ___ Freude.','haben','hat'],
+  ['Wir ___ glücklich.','sein','sind'],['Er ___ zufrieden.','sein','ist'],['Du ___ ein Angsthase.','sein','bist'],['Ich ___ ein Pechvogel.','sein','bin'],['Ihr ___ müde.','sein','seid'],
+];
+function deGroupOf(inf){ return DE_IRR[inf] ? 'unregel' : DE_HS[inf] ? 'habensein' : DE_MOD[inf] ? 'modal' : 'regel'; }
+function deForms(inf){ const t = DE_IRR[inf] || DE_HS[inf] || DE_MOD[inf]; return t ? t.split(' ') : conjRegular(inf); }
+function buildDeUnit(){
+  const items = [];
+  const verbs = [...new Set([...DE_REG, ...Object.keys(DE_IRR), ...Object.keys(DE_HS), ...Object.keys(DE_MOD)])];
+  verbs.forEach(inf => items.push({id:'d1-v-'+inf, unit:'d1', kind:'verb', inf, forms:deForms(inf), group:deGroupOf(inf)}));
+  DE_FIND.forEach((t,k) => items.push({id:'d1-f-'+k, unit:'d1', kind:'find', text:t}));
+  DE_END.forEach((e,k) => items.push({id:'d1-e-'+k, unit:'d1', kind:'end', pre:e[0], post:e[1], end:e[2]}));
+  DE_CLOZE.forEach((c,k) => items.push({id:'d1-c-'+k, unit:'d1', kind:'cloze', text:c[0], inf:c[1], ans:c[2], group:deGroupOf(c[1])}));
+  return {id:'d1', subject:'Deutsch', name:'Grammatik', title:'Verben', de:true, items};
+}
+const isDe = i => i && i.unit === 'd1';
+function deLabel(i){
+  if(i.kind === 'verb') return i.inf;
+  if(i.kind === 'find') return i.text.replace(/\*/g,'');
+  if(i.kind === 'end') return i.pre + '__ ' + i.post;
+  if(i.kind === 'cloze') return i.text + ' (' + i.inf + ')';
+  return i.en;
+}
+function deSolution(i){
+  if(i.kind === 'verb') return i.forms.map((f,k) => DE_PRON[k] + ' ' + f).join(', ');
+  if(i.kind === 'find') return (i.text.match(/\*[^*]+\*/g) || []).map(s => s.replace(/\*/g,'')).join(', ');
+  if(i.kind === 'end') return i.pre + i.end + ' ' + i.post;
+  if(i.kind === 'cloze') return i.text.replace('___', i.ans);
+  return i.de;
+}
+const capFirst = s => s.charAt(0).toUpperCase() + s.slice(1);
+function optsFrom(correct, pool, n){
+  const set = [correct]; for(const p of shuffle(pool)){ if(set.length >= n) break; if(!set.includes(p)) set.push(p); }
+  return shuffle(set).map(t => ({t, ok: t === correct}));
+}
+function simpleRegular(i){ return i.group === 'regel' && /[^el]en$/.test(i.inf) && !/[^r]ern$/.test(i.inf) && i.forms[1] === i.inf.slice(0,-2)+'st'; }
+function buildDeQ(item, forceType){
+  const b = st(item.id).b;
+  const q = {item, retry:false, de:true};
+  let types;
+  if(item.kind === 'find') types = ['de_find'];
+  else if(item.kind === 'end') types = ['de_end'];
+  else if(item.kind === 'cloze') types = ['de_cloze'];
+  else if(b <= 1) types = ['de_person','de_pron','de_inf'].concat(simpleRegular(item) ? ['de_endgen'] : []);
+  else if(b === 2) types = ['de_conj','de_inf','de_pron'];
+  else types = ['de_conj','de_conj','de_inf'];
+  q.type = forceType || types[Math.floor(Math.random()*types.length)];
+  const p = Math.floor(Math.random()*6);
+  const pr = p === 2 ? ['er','sie','es'][Math.floor(Math.random()*3)] : DE_PRON[p];
+  const f = item.forms;
+  switch(q.type){
+    case 'de_find': {
+      q.tokens = item.text.split(' ').map(w => ({t:w.replace(/\*/g,''), verb:/\*/.test(w), sel:false}));
+      q.skill = 'find'; q.sol = 'Verben: ' + deSolution(item); break;
+    }
+    case 'de_end':
+      q.opts = ['e','st','t','en'].map(e => ({t:'-'+e, ok:e === item.end})); q.skill = 'end'; q.sol = deSolution(item); break;
+    case 'de_endgen': {
+      const stem = item.inf.slice(0,-2), end = f[p].slice(stem.length);
+      q.p = p; q.pr = pr; q.stem = stem; q.opts = ['e','st','t','en'].map(e => ({t:'-'+e, ok:e === end})); q.skill = 'end'; q.sol = pr + ' ' + f[p]; break;
+    }
+    case 'de_cloze': {
+      const forms = deForms(item.inf), cap = item.text.startsWith('___');
+      const pool = forms.map(x => cap ? capFirst(x) : x);
+      q.answer = item.ans; q.keyboard = b >= 3;
+      if(!q.keyboard) q.opts = optsFrom(item.ans, pool, 4);
+      q.skill = item.group === 'regel' ? 'conj_regel' : item.group === 'unregel' ? 'conj_unregel' : item.group; q.sol = deSolution(item); break;
+    }
+    case 'de_inf': {
+      q.p = p; q.pr = pr; q.answer = item.inf; q.keyboard = b >= 3;
+      if(!q.keyboard){ const wrong = [f[0], f[2], f[1], f[4]].filter(x => x !== item.inf); q.opts = optsFrom(item.inf, wrong, 4); }
+      q.skill = 'inf'; q.sol = pr + ' ' + f[p] + ' → Ich kann ' + item.inf; break;
+    }
+    case 'de_person':
+      q.p = p; q.pr = pr; q.opts = [0,3,1,4,2,5].map(k => ({t:DE_PERS[k], ok:k === p})); q.skill = 'person'; q.sol = pr + ' ' + f[p] + ' = ' + DE_PERS[p]; break;
+    case 'de_pron': {
+      const valid = k => DE_PRON[k] === 'sie' ? (f[5] === f[p] || f[2] === f[p]) : f[k] === f[p];
+      const ok = DE_PRON.filter((x,k) => valid(k)), bad = DE_PRON.filter((x,k) => !valid(k));
+      const right = ok.includes(DE_PRON[p]) ? DE_PRON[p] : ok[0];
+      q.p = p; q.opts = shuffle([right, ...shuffle(bad).slice(0,3)]).map(t => ({t, ok:t === right}));
+      q.skill = 'pron'; q.sol = right + ' ' + f[p]; break;
+    }
+    case 'de_conj': {
+      q.p = p; q.pr = pr; q.answer = f[p]; q.keyboard = b >= 3;
+      if(!q.keyboard) q.opts = optsFrom(f[p], f.filter(x => x !== f[p]).concat(item.group === 'unregel' ? [conjRegular(item.inf)[p]] : []), 4);
+      q.skill = item.group === 'regel' ? 'conj_regel' : item.group === 'unregel' ? 'conj_unregel' : item.group; q.sol = pr + ' ' + f[p]; break;
+    }
+  }
+  return q;
+}
+function renderDeQ(q, opts){
+  if(q.nmg) return renderNmgQ(q, opts);
+  if(q.math) return renderMathQ(q, opts);
+  if(q.nom && q.type !== 'de_find') return renderNomQ(q, opts);
+  const it = q.item; let prompt = '', body = '';
+  const typeBox = (ph) => `<div class="panel qcard" style="min-height:0"><input id="typein" class="type-in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="${ph}" ${R.fb?'disabled':''} value="${esc(R.typed||'')}"></div>` + (R.fb ? '' : '<div class="actions"><button class="cta" data-a="check-spell">Prüfen</button></div>');
+  const blank = '<span class="blank">___</span>';
+  switch(q.type){
+    case 'de_find':
+      prompt = `<div class="qhint">${q.findHint || 'Tippe alle Verben an'}</div><div class="chips-sent">${q.tokens.map((t,k) => {
+        let c = 'wchip' + (t.sel ? ' sel' : '');
+        if(R.fb){ c = 'wchip' + (t.verb ? ' ok' : t.sel ? ' no' : ''); }
+        return `<button class="${c}" data-a="tok" data-k="${k}" ${R.fb?'disabled':''}>${esc(R.fb && t.orig ? t.orig : t.t)}</button>`; }).join('')}</div>`;
+      if(!R.fb) body = `<div class="actions"><button class="cta" data-a="check-find" ${q.tokens.some(t => t.sel) ? '' : 'disabled'}>Prüfen</button></div>`;
+      break;
+    case 'de_end':
+      prompt = `<div class="qhint">Welche Endung passt?</div><div class="qtext de" style="font-size:clamp(24px,4vw,36px)">${esc(it.pre)}${blank} ${esc(it.post)}</div>`;
+      body = opts(); break;
+    case 'de_endgen':
+      prompt = `<div class="qhint">Welche Endung passt?</div><div class="qtext de">${esc(q.pr)} ${esc(q.stem)}${blank}</div>`;
+      body = opts(); break;
+    case 'de_cloze':
+      prompt = `<div class="qhint">Setze «${esc(it.inf)}» richtig ein</div><div class="qtext de" style="font-size:clamp(24px,4vw,36px)">${esc(it.text).replace('___', blank)}</div>`;
+      body = q.keyboard ? typeBox('Verb eintippen') : opts(); break;
+    case 'de_inf':
+      prompt = `<div class="qhint">Wie heisst die Grundform? Ich kann …</div><div class="qtext de">${esc(q.pr)} ${esc(it.forms[q.p])}</div>`;
+      body = q.keyboard ? typeBox('Grundform') : opts(); break;
+    case 'de_person':
+      prompt = `<div class="qhint">Welche Personalform ist das?</div><div class="qtext de">${esc(q.pr)} ${esc(it.forms[q.p])}</div>`;
+      body = `<div class="persgrid"><span class="label">Einzahl</span><span class="label">Mehrzahl</span></div>` + opts('pers'); break;
+    case 'de_pron':
+      prompt = `<div class="qhint">Welches Wort passt davor?</div><div class="qtext de">${blank} ${esc(it.forms[q.p])}</div>`;
+      body = opts(); break;
+    case 'de_conj':
+      prompt = `<div class="qhint">Setze «${esc(it.inf)}» richtig ein</div><div class="qtext de">${esc(q.pr)} ${blank}</div>`;
+      body = q.keyboard ? typeBox(q.pr + ' …') : opts(); break;
+  }
+  return {prompt, body};
+}
+
+/* ---------------- NMG: Delfine ---------------- */
+const NMG_SPECIES = [
+  {key:'tuemmler', name:'Grosser Tümmler', mem:'Fernsehserie «Flipper»', facts:[
+    'ist der bekannteste Delfin.','ist der Star der Fernsehserie «Flipper».','ist oben dunkelgrau und unten hellgrau.','ist besonders verspielt und lebhaft.','reitet gerne auf Wellen.','kommt am häufigsten zu Booten und Schwimmern.','hat einen kurzen Schnabel.','lebt in warmen Meeren.']},
+  {key:'orca', name:'Orca', mem:'grösster Delfin', facts:[
+    'ist der grösste Delfin.','hiess früher Killerwal.','heisst auch Schwertwal, wegen seiner Rückenflosse.','hat einen weissen Fleck hinter den Augen.','hat eine Rückenflosse, die fast 2 Meter hoch ist.','wird bis 9 Meter lang.','jagt sogar Robben.','ist auf dem Rücken und an den Seiten schwarz.','ist am Bauch und unten am Kopf weiss.','heisst Schwertwal, weil seine Finne wie ein Schwert aus dem Wasser schaut.','hat Männchen mit viel grösseren Finnen als die Weibchen.']},
+  {key:'spinner', name:'Spinner-Delfin', mem:'Luftsprünge mit Drehungen', facts:[
+    'macht viele Luftsprünge mit vier Drehungen.','wird auch Dreher-Delfin genannt.','hat eine grosse, dreieckige Finne.','hat einen schwarzen Rücken, graue Seiten und einen weissen Bauch.']},
+  {key:'amazonas', name:'Amazonasdelfin', mem:'lebt im Fluss', facts:[
+    'lebt im Fluss Amazonas in Brasilien.','ist fast blind.','schwimmt langsam und taucht oft auf.','hat einen langen, schmalen Schnabel.','sucht seine Nahrung im schlammigen Boden.','ist oft rosa gefärbt.','lebt im Süsswasser, nicht im Meer.','wird etwa zwei Meter lang.']},
+  {key:'gemein', name:'Gemeiner Delfin', mem:'Gruppen von 10 und mehr', facts:[
+    'wird auch «gewöhnlicher Delfin» genannt.','ist gerne mit anderen Delfinen zusammen.','schwimmt in Gruppen von 10 oder mehr Delfinen.','hat an der Seite ein gelbliches Muster, das aussieht wie eine Sanduhr.']},
+  {key:'weissstreifen', name:'Weissstreifendelfin', mem:'schwimmt neben Schiffen', facts:[
+    'ist oben schwarz, unten weiss und hat schwarzgraue Streifen an der Seite.','wird 2 bis 3 Meter lang.','hat einen kurzen Schnabel, kleine Flipper und eine grosse Finne.','schwimmt gerne neben Schiffen und in grossen Gruppen.','hat einen kürzeren Schnabel als andere Delfine.','lebt manchmal mit mehreren tausend Tieren in einer Schule.']},
+];
+const NMG_TF = [
+  ['Delfine sind Fische.', false, 'Delfine sind Säugetiere, wie wir Menschen.', 'leben'],
+  ['Delfine atmen Luft.', true, 'Sie müssen zum Atmen an die Wasseroberfläche.', 'leben'],
+  ['Delfine haben Kiemen wie Fische.', false, 'Delfine haben Lungen.', 'leben'],
+  ['Delfine atmen durch das Blasloch oben auf dem Kopf.', true, 'Das Blasloch ist ihre Nase.', 'leben'],
+  ['Delfine können unter Wasser atmen.', false, 'Sie halten die Luft an und tauchen dann wieder auf.', 'leben'],
+  ['Delfine legen Eier.', false, 'Delfine bringen lebende Junge zur Welt.', 'leben'],
+  ['Delfin-Babys trinken Milch bei ihrer Mutter.', true, 'Das ist typisch für Säugetiere.', 'leben'],
+  ['Ein Delfin-Baby heisst Kalb.', true, 'Wie bei Kühen und Walen.', 'leben'],
+  ['Delfine fressen Fische und Tintenfische.', true, 'Delfine sind Jäger.', 'verhalten'],
+  ['Delfine finden ihre Beute mit Klicklauten und Echo.', true, 'Das nennt man Echoortung.', 'verhalten'],
+  ['Delfine verständigen sich mit Pfeiflauten.', true, 'Jeder Delfin hat seinen eigenen Pfiff, fast wie einen Namen.', 'verhalten'],
+  ['Eine Gruppe von Delfinen nennt man Schule.', true, 'Man sagt auch Delfinschule.', 'verhalten'],
+  ['Beim Schlafen ruht nur eine Hälfte des Gehirns.', true, 'So kann der Delfin weiter atmen und aufpassen.', 'verhalten'],
+  ['Alle Delfine leben im Meer.', false, 'Der Amazonasdelfin lebt im Fluss.', 'arten'],
+  ['Der Orca ist ein Delfin.', true, 'Er ist sogar der grösste Delfin.', 'arten'],
+  ['Fischernetze und Plastik im Meer sind gefährlich für Delfine.', true, 'Delfine können sich in Netzen verfangen oder Plastik verschlucken.', 'schutz'],
+  ['Lärm von Schiffen stört Delfine nicht.', false, 'Der Lärm kann das Gehör der Delfine schädigen.', 'schutz'],
+  ['Es sind etwas mehr als 40 Delfinarten bekannt.', true, 'Davon leben sechs Arten als Flussdelfine.', 'lebensraum'],
+  ['Flussdelfine leben im Süsswasser.', true, 'Meeresdelfine leben im Salzwasser.', 'lebensraum'],
+  ['Es gibt mehr Arten von Süsswasserdelfinen als von Salzwasserdelfinen.', false, 'Es gibt deutlich mehr Salzwasserdelfine.', 'lebensraum'],
+  ['Flussdelfine leben oft in kleinen Gruppen von zwei bis fünf Tieren.', true, 'Meeresdelfine bilden oft grössere Gruppen.', 'lebensraum'],
+  ['Meeresdelfine findet man vor allem in wärmeren Gewässern.', true, 'Sie leben im offenen Meer und in der Nähe von Küsten.', 'lebensraum'],
+  ['Delfine sind Fleischfresser.', true, 'Sie mögen keine Pflanzen.', 'nahrung'],
+  ['Delfine kauen ihr Essen gut mit den Zähnen.', false, 'Sie schlucken ihr Essen als Ganzes herunter.', 'nahrung'],
+  ['Delfine brauchen ihre Zähne, um die Beute bei der Jagd zu packen.', true, 'Deshalb sind ihre Zähne sehr spitzig.', 'nahrung'],
+  ['Je grösser eine Delfinart ist, desto grösser ist auch ihre Beute.', true, 'Der Orca jagt sogar Robben.', 'nahrung'],
+  ['Die Haut der Delfine fühlt sich glatt an, ähnlich wie Gummi.', true, 'Sie hat keine Schuppen wie die Haut der Fische.', 'leben'],
+  ['Delfine bewegen ihre Schwanzflosse hin und her.', false, 'Delfine bewegen sie auf und ab, Fische hin und her.', 'leben'],
+  ['Ein Delfinweibchen bekommt alle paar Jahre ein Junges.', true, 'Das Junge entwickelt sich im Bauch der Mutter.', 'leben'],
+  ['Jede Finne sieht ein bisschen anders aus.', true, 'Wie ein Fingerabdruck beim Menschen.', 'koerper'],
+  ['Wenn Öl ins Meer gelangt, gehen viele Meeresbewohner zugrunde.', true, 'Zum Beispiel nach einem Schiffsunglück.', 'schutz'],
+  ['In manchen Ländern machen Fischer Jagd auf Delfine.', true, 'Auch das ist eine Gefahr für Delfine.', 'schutz'],
+];
+const NMG_MC = [
+  ['Zu welcher Tiergruppe gehören Delfine?', 'Säugetiere', ['Fische','Reptilien','Amphibien'], 'leben'],
+  ['Womit atmen Delfine?', 'mit der Lunge', ['mit Kiemen','mit der Haut','mit den Flossen'], 'leben'],
+  ['Wo hat der Delfin seine Nase?', 'Blasloch oben auf dem Kopf', ['vorne am Schnabel','unter dem Bauch','an der Schwanzflosse'], 'leben'],
+  ['Wie heisst ein Delfin-Baby?', 'Kalb', ['Welpe','Küken','Fohlen'], 'leben'],
+  ['Wie kommt ein Delfin-Baby zur Welt?', 'mit der Schwanzflosse zuerst', ['es schlüpft aus einem Ei','mit dem Kopf zuerst','in einem Nest am Strand'], 'leben'],
+  ['Wie heisst eine Gruppe von Delfinen?', 'Schule', ['Herde','Rudel','Schwarm'], 'verhalten'],
+  ['Was fressen Delfine?', 'Fische und Tintenfische', ['Gras und Seetang','Korallen','Sand und Steine'], 'verhalten'],
+  ['Wie finden Delfine ihre Beute im trüben Wasser?', 'mit Klicklauten und Echo', ['mit Licht','mit den Flippern','mit Zauberei'], 'verhalten'],
+  ['Wie verständigen sich Delfine?', 'mit Pfeif- und Klicklauten', ['mit Farben','mit Bellen','gar nicht'], 'verhalten'],
+  ['Was ist für Delfine gefährlich?', 'Fischernetze und Plastik', ['Sonnenschein','Regen','Wellen'], 'schutz'],
+  ['Was ist die Finne?', 'die Rückenflosse', ['die Schwanzflosse','die Brustflosse','das Maul'], 'koerper'],
+  ['Was ist die Fluke?', 'die Schwanzflosse', ['die Rückenflosse','die Brustflosse','das Blasloch'], 'koerper'],
+  ['Was sind die Flipper?', 'die Brustflossen', ['die Schwanzflosse','die Zähne','die Augen'], 'koerper'],
+  ['Wie heisst die runde Stirn des Delfins?', 'Melone', ['Kürbis','Beule','Kuppel'], 'koerper'],
+  ['Wie heisst die kleine Einbuchtung in der Mitte der Fluke?', 'Schwanzflossenkerbe', ['Flipper','Melone','Finne'], 'koerper'],
+  ['Warum ist eine Finne wie ein Fingerabdruck?', 'Jede Finne sieht anders aus.', ['Alle Finnen sind gleich.','Die Finne hat Rillen.','Man kann damit greifen.'], 'koerper'],
+  ['Wie viele Delfinarten leben als Flussdelfine?', 'sechs', ['zwei','zwanzig','vierzig'], 'lebensraum'],
+  ['Wie viele Delfinarten sind ungefähr bekannt?', 'etwas mehr als 40', ['etwa 6','etwa 400','genau 12'], 'lebensraum'],
+  ['Wo leben Meeresdelfine?', 'im offenen Meer und in der Nähe von Küsten', ['in Seen in den Bergen','nur in Flüssen','im Eis am Nordpol'], 'lebensraum'],
+  ['Was mögen Delfine nicht fressen?', 'Pflanzen', ['Fische','Tintenfische','Krebse'], 'nahrung'],
+  ['Warum sind die Zähne der Delfine so spitzig?', 'um die Beute zu packen', ['zum Kauen','zum Graben','zum Kämpfen um Futter'], 'nahrung'],
+  ['Welches Tier kann auf dem Speiseplan von Delfinen stehen?', 'Garnelen', ['Gras','Seetang','Früchte'], 'nahrung'],
+  ['Welches Tier fressen grosse Delfine wie der Orca sogar?', 'Robben', ['Kühe','Bienen','Mäuse'], 'nahrung'],
+  ['Was lernen Delfine in ihrer Schule?', 'wie sie Fische fangen müssen', ['wie man liest','wie man fliegt','wie man Nester baut'], 'verhalten'],
+  ['In Schulen lernen Delfine, wie lange sie … können, ehe ihnen die Luft ausgeht.', 'tauchen', ['fangen','entkommen','verletzen'], 'verhalten'],
+  ['In Schulen lernen Delfine, wie sie Haien … können.', 'entkommen', ['tauchen','fangen','verfangen'], 'verhalten'],
+  ['Warum dürfen Delfine Schiffen nicht zu nahe kommen?', 'Die Schiffsschraube kann sie verletzen.', ['Schiffe sind zu langsam.','Schiffe haben kein Futter.','Schiffe sind zu leise.'], 'schutz'],
+  ['Eine grosse Gefahr für Delfine und andere Meerestiere sind …', 'Netze', ['Wellen','Felsen','Muscheln'], 'schutz'],
+  ['Was passiert, wenn sich Delfine in Netzen verfangen?', 'Sie können nicht mehr zum Atmen auftauchen und ertrinken.', ['Sie schlafen ein.','Sie werden grösser.','Nichts, sie schwimmen weiter.'], 'schutz'],
+  ['Was kann der Lärm von Motorschiffen bei Delfinen schädigen?', 'das Gehör', ['die Zähne','die Flossen','die Haut'], 'schutz'],
+  ['Was passiert, wenn Delfine Plastiktüten verschlucken?', 'Sie können krank werden oder sterben.', ['Sie werden schneller.','Sie können besser sehen.','Gar nichts.'], 'schutz'],
+  ['Wie bewegt ein Fisch seine Schwanzflosse?', 'hin und her', ['auf und ab','im Kreis','gar nicht'], 'leben'],
+  ['Wie viele Junge bekommen Fische einmal oder mehrmals im Jahr?', 'Hunderte, in Eiern', ['genau eines','keine','zwei, im Bauch'], 'leben'],
+];
+const NMG_PARTS = [
+  {name:'Schnabel', x:368, y:122, hint:'vorne am Kopf'},
+  {name:'Blasloch', x:284, y:44, hint:'zum Atmen'},
+  {name:'Finne', x:203, y:20, hint:'Rückenflosse'},
+  {name:'Fluke', x:20, y:100, hint:'Schwanzflosse'},
+  {name:'Flipper', x:236, y:170, hint:'Brustflosse'},
+  {name:'Auge', x:322, y:84, hint:'zum Sehen'},
+  {name:'Melone', x:362, y:66, hint:'runde Stirn'},
+  {name:'Ohr', x:300, y:138, hint:'kleine Öffnung hinter dem Auge'},
+];
+function buildNmgUnit(){
+  const items = [];
+  NMG_SPECIES.forEach(sp => {
+    items.push({id:'n1-sp-'+sp.key, unit:'n1', kind:'species', sp:sp.key, group:'arten', mem:[sp.name, sp.mem]});
+    sp.facts.forEach((f,k) => items.push({id:'n1-f-'+sp.key+'-'+k, unit:'n1', kind:'spfact', sp:sp.key, fact:f, group:'arten'}));
+  });
+  NMG_TF.forEach((t,k) => items.push({id:'n1-tf-'+k, unit:'n1', kind:'tf', s:t[0], v:t[1], why:t[2], group:t[3]}));
+  NMG_MC.forEach((m,k) => items.push({id:'n1-mc-'+k, unit:'n1', kind:'mc', q:m[0], a:m[1], wrong:m[2], group:m[3]}));
+  [['atmet durch die Lunge','Delfin'],['hat eine glatte Haut','Delfin'],['bekommt nur ein Baby','Delfin'],['bewegt die Schwanzflosse auf und ab','Delfin'],['muss zum Atmen an die Wasseroberfläche','Delfin'],['ist ein Säugetier','Delfin'],
+   ['hat Schuppen','Fisch'],['atmet durch Kiemen','Fisch'],['bekommt viele hundert Babys','Fisch'],['bewegt die Schwanzflosse hin und her','Fisch'],['nutzt den Sauerstoff im Wasser','Fisch'],['legt Eier','Fisch']]
+    .forEach((d,k) => items.push({id:'n1-df-'+k, unit:'n1', kind:'mc', q:'Delfin oder Fisch? Wer ' + d[0] + '?', a:d[1], wrong:[d[1] === 'Delfin' ? 'Fisch' : 'Delfin'], group:'leben'}));
+  [['der Delfin','Wasser'],['die Muschel','Wasser'],['die Qualle','Wasser'],['das Seepferdchen','Wasser'],['der Fisch','Wasser'],['der Vogel','Land'],['die Biene','Land'],['die Maus','Land'],['der Fuchs','Land'],['das Pony','Land']]
+    .forEach((d,k) => items.push({id:'n1-wl-'+k, unit:'n1', kind:'mc', q:'Wo lebt ' + d[0] + '?', a: d[1] === 'Wasser' ? 'im Wasser' : 'an Land', wrong:[d[1] === 'Wasser' ? 'an Land' : 'im Wasser'], group:'lebensraum'}));
+  NMG_PARTS.forEach((p,k) => items.push({id:'n1-p-'+k, unit:'n1', kind:'part', idx:k, group:'koerper', mem:[p.name, p.hint]}));
+  return {id:'n1', subject:'NMG', name:'Tiere', title:'Delfinarten', items};
+}
+const isNmg = i => i && i.unit === 'n1';
+const spOf = key => NMG_SPECIES.find(s => s.key === key);
+function nmgLabel(i){
+  if(i.kind === 'species') return spOf(i.sp).name;
+  if(i.kind === 'spfact') return 'Welcher Delfin ' + i.fact.replace(/\.$/,'') + '?';
+  if(i.kind === 'tf') return i.s;
+  if(i.kind === 'mc') return i.q;
+  if(i.kind === 'part') return 'Körperteil: ' + NMG_PARTS[i.idx].name;
+  return '';
+}
+function nmgSolution(i){
+  if(i.kind === 'species') return spOf(i.sp).facts.join(' ');
+  if(i.kind === 'spfact') return spOf(i.sp).name;
+  if(i.kind === 'tf') return (i.v ? 'Richtig. ' : 'Falsch. ') + i.why;
+  if(i.kind === 'mc') return i.a;
+  if(i.kind === 'part') return NMG_PARTS[i.idx].name + ' (' + NMG_PARTS[i.idx].hint + ')';
+  return '';
+}
+function buildNmgQ(item, forceType){
+  const b = st(item.id).b;
+  const q = {item, retry:false, de:true, nmg:true};
+  const types = item.kind === 'part' ? ['part_name','part_tap'] : item.kind === 'species' ? ['sp_fact'] : item.kind === 'spfact' ? ['sp_which'] : [item.kind];
+  q.type = forceType || types[Math.floor(Math.random()*types.length)];
+  if(q.type === 'sp_which'){
+    q.opts = optsFrom(spOf(item.sp).name, NMG_SPECIES.map(s => s.name).filter(n => n !== spOf(item.sp).name), 4);
+    q.sol = spOf(item.sp).name + ' ' + item.fact; q.skill = 'nmg_arten';
+  } else if(q.type === 'sp_fact'){
+    const sp = spOf(item.sp), right = sp.facts[Math.floor(Math.random()*sp.facts.length)];
+    const others = NMG_SPECIES.filter(s => s.key !== sp.key).flatMap(s => s.facts);
+    q.opts = optsFrom(right, others, 4).map(o => ({...o, t: capFirst(o.t)}));
+    q.opts.forEach(o => { if(o.t === capFirst(right)) o.ok = true; });
+    q.sol = sp.name + ' ' + right; q.skill = 'nmg_arten';
+  } else if(q.type === 'tf'){
+    q.opts = [{t:'Richtig', ok:item.v}, {t:'Falsch', ok:!item.v}];
+    q.sol = (item.v ? 'Richtig. ' : 'Falsch. ') + item.why; q.skill = 'nmg_wissen';
+  } else if(q.type === 'mc'){
+    q.opts = shuffle([item.a, ...item.wrong]).map(t => ({t: capFirst(t), ok: t === item.a}));
+    q.sol = capFirst(item.a); q.skill = 'nmg_wissen';
+  } else if(q.type === 'part_name'){
+    q.opts = optsFrom(NMG_PARTS[item.idx].name, NMG_PARTS.map(p => p.name).filter(n => n !== NMG_PARTS[item.idx].name), 4);
+    q.sol = 'Nummer ' + (item.idx+1) + ' ist: ' + NMG_PARTS[item.idx].name + ' (' + NMG_PARTS[item.idx].hint + ')'; q.skill = 'nmg_koerper';
+  } else if(q.type === 'part_tap'){
+    q.sol = NMG_PARTS[item.idx].name + ' ist Nummer ' + (item.idx+1) + '.'; q.skill = 'nmg_koerper';
+  }
+  return q;
+}
+function dolphinSvg(q){
+  const markers = NMG_PARTS.map((p,k) => {
+    let cls = 'mk';
+    if(q.type === 'part_name' && k === q.item.idx) cls += ' hl';
+    if(q.type === 'part_tap' && R.fb){ if(k === q.item.idx) cls += ' ok'; else if(R.fb.pick === k) cls += ' no'; }
+    const tag = q.type === 'part_tap' && !R.fb ? 'a' : 'g';
+    return `<g class="${cls}" ${q.type === 'part_tap' && !R.fb ? `data-a="part" data-k="${k}" role="button" tabindex="0"` : ''} transform="translate(${p.x} ${p.y})"><circle r="15"/><text y="6" text-anchor="middle">${k+1}</text></g>`;
+  }).join('');
+  return `<svg class="dolphin" viewBox="0 0 400 200" role="img" aria-label="Delfin mit nummerierten Körperteilen">
+    <defs><linearGradient id="dolg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f6480"/><stop offset=".55" stop-color="#7d93ad"/><stop offset="1" stop-color="#d7e0ea"/></linearGradient></defs>
+    <path d="M175 66 C185 40 200 28 215 22 C212 40 214 54 226 64 Z" fill="#4f6480"/>
+    <path d="M74 100 C56 92 40 78 22 66 C32 86 38 96 46 102 C38 108 30 120 22 138 C42 124 58 112 74 104 Z" fill="#4f6480"/>
+    <path d="M70 100 C110 80 170 62 240 64 C285 66 320 78 345 92 C360 96 378 98 392 102 C380 108 360 110 340 110 C300 124 240 132 180 128 C130 124 95 112 70 104 Z" fill="url(#dolg)"/>
+    <path d="M240 120 C232 138 222 150 208 160 C230 154 250 140 262 124 Z" fill="#5d7391"/>
+    <path d="M345 106 C355 104 370 103 384 103" stroke="#2f3d50" stroke-width="2" fill="none"/>
+    <circle cx="318" cy="92" r="4" fill="#111"/>
+    <ellipse cx="284" cy="66" rx="5" ry="2" fill="#2f3d50"/>
+    <g stroke="#8e97ab" stroke-width="1.5" stroke-dasharray="3 3"><path d="M368 122 L374 104"/><path d="M284 44 L284 63"/><path d="M203 20 L203 36"/><path d="M20 100 L34 100"/><path d="M236 170 L232 145"/><path d="M322 84 L319 90"/><path d="M362 66 L348 84"/><path d="M300 138 L304 104"/></g>
+    <circle cx="304" cy="100" r="1.8" fill="#2f3d50"/>
+    ${markers}
+  </svg>`;
+}
+function renderNmgQ(q, opts){
+  const it = q.item; let prompt = '', body = '';
+  switch(q.type){
+    case 'sp_which':
+      prompt = `<div class="qhint">Welcher Delfin ist das?</div><div class="qtext de" style="font-size:clamp(22px,3.8vw,32px)">Dieser Delfin ${esc(it.fact)}</div>`;
+      body = opts(); break;
+    case 'sp_fact':
+      prompt = `<div class="qhint">Was passt zu diesem Delfin?</div><div class="qtext de">${esc(spOf(it.sp).name)}</div>`;
+      body = opts('long'); break;
+    case 'tf':
+      prompt = `<div class="qhint">Richtig oder falsch?</div><div class="qtext de" style="font-size:clamp(22px,3.8vw,32px)">${esc(it.s)}</div>`;
+      body = opts(); break;
+    case 'mc':
+      prompt = `<div class="qhint">Delfin-Wissen</div><div class="qtext de" style="font-size:clamp(22px,3.8vw,32px)">${esc(it.q)}</div>`;
+      body = opts(); break;
+    case 'part_name':
+      prompt = `<div class="qhint">Wie heisst Nummer ${it.idx+1}?</div>${dolphinSvg(q)}`;
+      body = opts(); break;
+    case 'part_tap':
+      prompt = `<div class="qhint">Tippe auf: <b style="color:var(--fg)">${esc(NMG_PARTS[it.idx].name)}</b></div>${dolphinSvg(q)}`;
+      break;
+  }
+  return {prompt, body};
+}
+
+/* ---------------- Deutsch: Nomen ---------------- */
+const ART = {m:'der', f:'die', n:'das'};
+const GENDER = {m:'männlich', f:'weiblich', n:'sächlich'};
+const NOM_LEX = `m Besuch Besuche|f Wolke Wolken|f Luft -|n Glück -|m Berg Berge|f Stunde Stunden|m Kreis Kreise|m Name Namen|m Engel Engel|f Wette Wetten|m Monat Monate|m Gestank -|f Farbe Farben|n Loch Löcher|f Angst Ängste|m Abend Abende|m Stern Sterne|f Minute Minuten|n Gold -|m Wind Winde|m Traum Träume|m Mensch Menschen|f Hitze -|f Geschichte Geschichten|n Wunder Wunder|m Gedanke Gedanken|n Geheimnis Geheimnisse|f Aufführung Aufführungen|f Ordnung Ordnungen|f Wut -|f Meinung Meinungen|f Bremse Bremsen|f Frage Fragen|f Rechnung Rechnungen|n Spiel Spiele|m Tanz Tänze|n Zelt Zelte|n Feuer Feuer|m Tisch Tische|f Zeichnung Zeichnungen|m Regen -|n Knie Knie|m Arm Arme|f Schulter Schultern|f Ferse Fersen|m Fuss Füsse|m Finger Finger|m Mund Münder|m Oberschenkel Oberschenkel|m Bauch Bäuche|f Hand Hände|f Nase Nasen|m Rücken Rücken|m Ellbogen Ellbogen|n Bein Beine|n Ohr Ohren|m Hals Hälse|m Fels Felsen|m Pilot Piloten|n Kind Kinder|n Gewürz Gewürze|f Schachtel Schachteln|n Büro Büros|m Papagei Papageien|n Problem Probleme|f Kiste Kisten|f Kerze Kerzen|f Sonne Sonnen|n Schiff Schiffe|f Glocke Glocken|f Idee Ideen|f Trommel Trommeln|m Feind Feinde|f Zwetschge Zwetschgen|m Tag Tage|f Treppe Treppen|n Brett Bretter|f Welle Wellen|m Delfin Delfine|f Ratte Ratten|f Person Personen|n Foto Fotos|f Schnecke Schnecken|n Diktat Diktate|f Flasche Flaschen|m Pinsel Pinsel|m Schlüssel Schlüssel|m Knochen Knochen|m Zettel Zettel|m Teller Teller|f Brille Brillen|n Licht Lichter|m Zweig Zweige|n Zebra Zebras|m Planet Planeten|n Brot Brote|f Flamme Flammen|n Kissen Kissen|n Auto Autos|f Bürste Bürsten|n Fenster Fenster|f Mücke Mücken|n Nest Nester|n Telefon Telefone|f Wand Wände|n Rad Räder|m Hut Hüte|f Maus Mäuse|f Frucht Früchte|m Storch Störche|m Zug Züge|m Arzt Ärzte|m Bach Bäche|n Fach Fächer|f Gans Gänse|n Holz Hölzer|m Strauch Sträucher|n Tuch Tücher|m Ast Äste|f Bank Bänke|m Busch Büsche|m Frosch Frösche|m Turm Türme|m Kopf Köpfe|m Schnauz Schnäuze|n Kraut Kräuter|m Pfiff Pfiffe|m Blitz Blitze|n Lied Lieder|m Schritt Schritte|n Gestell Gestelle|m Ball Bälle|m Satz Sätze|m Dieb Diebe|m Sack Säcke|m Kamm Kämme|m Fluss Flüsse|m Mann Männer|m Block Blöcke|f Nuss Nüsse|m Brief Briefe|m Platz Plätze|n Schloss Schlösser|n Blatt Blätter|m Blick Blicke|m Gartenzaun Gartenzäune|m Luftballon Luftballons|n Etui Etuis|n Zeltlager Zeltlager|m Kugelschreiber Kugelschreiber|n Schreibpapier -|f Rakete Raketen|m Velohelm Velohelme|f Strassenlampe Strassenlampen|m Deckel Deckel|f Fliege Fliegen|f Tulpe Tulpen|n Schwein Schweine|n Signal Signale|m Hammer Hämmer|m Traktor Traktoren|m Zauberer Zauberer|f Wespe Wespen|m Ring Ringe|n Pflaster Pflaster|m Zaun Zäune|f Möwe Möwen|n Paket Pakete|f Ortschaft Ortschaften|m Himmel Himmel|n Gespenst Gespenster|m Morgen Morgen|f Eisenbahn Eisenbahnen|f Blume Blumen|m Stift Stifte|m Hund Hunde|m Pilz Pilze|n Bild Bilder|f Burg Burgen|n Dach Dächer|n Haus Häuser|m Becher Becher`;
+const NOM_FIND = [
+  'In der *Nacht* können wir nicht schlafen.','Wir stehen auf und gehen in den *Garten*.','Wir betrachten den *Himmel*.','Dort sehen wir den *Mond* und die *Sterne*.','Dieser *Sternenhimmel* ist fantastisch.',
+  'Wir haben eine *Katze*.','Sie liegt auf dem *Sofa* und schläft.','Nun hört sie die *Vögel* pfeifen.','Sie spitzt die *Ohren* und will in den *Garten*.','Sie schleicht über den *Rasen* zu den *Rosen*.',
+  'Unter dem *Apfelbaum* wartet sie.','Hoch oben in den *Ästen* zwitschern die *Amseln*.','Die *Katze* klettert über den *Gartenzaun*.','Sie verschwindet hinter dem *Haus*.','Vielleicht versucht sie, eine *Maus* zu fangen.',
+  'Ich stehe am *Wasser* und beobachte mit dem *Feldstecher* die *Enten*.','Wir sehen uns den neuen *Film* im *Kino* an.','Am *Abend* lese ich immer noch in meinem *Buch*.','Im *Herbst* stehen die *Mostflaschen* im *Keller*.',
+  'Er reist im *Sommer* mit den *Eltern* und der *Schwester* in die *Ferien*.'
+];
+const NOM_NUM = [
+  ['der Fels','E'],['die Piloten','M'],['die Kinder','M'],['die Gewürze','M'],['die Schachteln','M'],['die Büros','M'],['der Papagei','E'],['das Problem','E'],['die Kiste','E'],['die Zelte','M'],['der Gedanke','E'],['die Kerze','E'],
+  ['die Wolken','M'],['die Sonne','E'],['der Monat','E'],['die Schiffe','M'],['die Glocken','M'],['die Ideen','M'],['die Trommel','E'],['der Feind','E'],['die Zwetschge','E'],['die Tage','M'],['die Treppe','E'],['die Bretter','M'],
+  ['die Wellen','M'],['der Delfin','E'],['die Ratte','E'],['die Person','E'],['die Fotos','M'],['die Schnecken','M'],['das Diktat','E'],['die Menschen','M'],
+  ['Wo ist der Deckel für die **Flasche**?','E'],['Habt ihr die **Pinsel** ausgewaschen?','M'],['Er hat alle **Schlüssel** verloren.','M'],['Der Hund nagt an einem **Knochen**.','E'],
+  ['Ich habe dir die **Zettel** auf das Pult gelegt.','M'],['Der **Schokoladekuchen** schmeckt ausgezeichnet.','E'],['Ich habe mir im Turnen den **Finger** verstaucht.','E'],['Du musst die Messer rechts neben die **Teller** legen.','M'],
+];
+const NOM_PAIR = [['glück','glücklich','das Glück'],['geheimnis','geheim','das Geheimnis'],['aufführung','aufführen','die Aufführung'],['traum','träumen','der Traum'],['ordnung','ordnen','die Ordnung'],['gold','goldig','das Gold'],
+  ['wut','wütend','die Wut'],['farbe','farbig','die Farbe'],['meinung','meinen','die Meinung'],['besuch','besuchen','der Besuch'],['bremse','bremsen','die Bremse'],['gedanke','denken','der Gedanke'],['frage','fragen','die Frage']];
+const NOM_SALAD_N = [['STERN','der Stern'],['MINUTE','die Minute'],['GOLD','das Gold'],['WIND','der Wind'],['LUFT','die Luft'],['TRAUM','der Traum'],['MENSCH','der Mensch'],['HITZE','die Hitze'],['GESCHICHTE','die Geschichte'],['WUNDER','das Wunder'],['GEDANKE','der Gedanke'],['STUNDE','die Stunde'],['BESUCH','der Besuch']];
+const NOM_SALAD_X = ['DANN','LANGSAM','HELLBLAU','SPAZIEREN','GESTERN','NORMAL','SCHNELL'];
+const NOM_V2N = [['rechnen','die Rechnung'],['spielen','das Spiel'],['tanzen','der Tanz'],['wetten','die Wette'],['zelten','das Zelt'],['feuern','das Feuer'],['tischen','der Tisch'],['zeichnen','die Zeichnung'],['kreisen','der Kreis'],['regnen','der Regen']];
+const NOM_COMP = [['die Tasche','die Lampe','Taschenlampe'],['die Sonne','der Schirm','Sonnenschirm'],['der Regen','der Bogen','Regenbogen'],['die Brille','die Schlange','Brillenschlange'],['der Sirup','die Flasche','Sirupflasche'],
+  ['die Kleider','der Schrank','Kleiderschrank'],['das Holz','der Boden','Holzboden'],['die Schnecke','das Haus','Schneckenhaus'],['der Tisch','die Decke','Tischdecke'],['das Haus','die Schuhe','Hausschuhe'],
+  ['das Telefon','das Buch','Telefonbuch'],['die Lampe','der Schirm','Lampenschirm'],['die Tasche','das Messer','Taschenmesser'],['das Bett','die Flasche','Bettflasche'],['das Fenster','der Laden','Fensterladen'],
+  ['das Gemüse','die Suppe','Gemüsesuppe'],['die Suppe','der Teller','Suppenteller'],['der Sand','der Kasten','Sandkasten'],['die Wand','die Tafel','Wandtafel'],['der Fuss','der Ball','Fussball']];
+const NOM_SPLIT = [['der Schwingbesen','schwingen','der Besen'],['der Zauberstab','zaubern','der Stab'],['der Schreibtisch','schreiben','der Tisch'],['das Kochbuch','kochen','das Buch'],['der Malkasten','malen','der Kasten'],
+  ['der Putzlappen','putzen','der Lappen'],['das Schwimmbad','schwimmen','das Bad'],['der Werkraum','werken','der Raum'],['die Einkaufstasche','einkaufen','die Tasche'],['die Turnhalle','turnen','die Halle'],['das Trinkwasser','trinken','das Wasser']];
+const NOM_IMAM = [['in + dem = ?','im',['am','ins','in']],['an + dem = ?','am',['im','ans','an']]];
+const unUml = s => s.replace(/äu/g,'au').replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/Ä/g,'A').replace(/Ö/g,'O').replace(/Ü/g,'U');
+function umlautify(w){
+  const i = w.lastIndexOf('au'); if(i > 0 && !/[äöü]/.test(w)) return w.slice(0,i) + 'äu' + w.slice(i+2);
+  const m = w.match(/^(.*)([aouAOU])([^aeiouäöü]*)$/); if(!m) return w;
+  const map = {a:'ä',o:'ö',u:'ü',A:'Ä',O:'Ö',U:'Ü'}; return m[1] + map[m[2]] + m[3];
+}
+function plDistractors(sg, pl){
+  const oneSyl = (sg.toLowerCase().match(/[aeiouäöü]+/g) || []).length === 1;
+  const c = [sg+'e', sg+'en', sg.endsWith('e') ? sg+'n' : sg+'er', sg+'s', sg, unUml(pl), sg.endsWith('e') ? sg.slice(0,-1)+'en' : sg+'n'].concat(oneSyl ? [umlautify(sg)+'e', umlautify(sg)+'er'] : []);
+  return [...new Set(c)].filter(x => x !== pl && x.length > 1);
+}
+function buildNomUnit(){
+  const items = [], seen = new Set();
+  NOM_LEX.split('|').forEach(row => {
+    const [g, w, pl] = row.trim().split(' ');
+    if(seen.has(w)) return; seen.add(w);
+    const it = {id:'d2-n-'+w, unit:'d2', kind:'noun', g, w, pl: pl === '-' ? null : pl};
+    if(it.pl){
+      it.hard = /[äöü]/.test(it.pl) && !/[äöü]/.test(w) || /(ff|tt|ll|ss|mm|nn|ck|tz)$/.test(w);
+      if(it.pl !== w) it.mem = [ART[g] + ' ' + w, 'die ' + it.pl];
+    }
+    items.push(it);
+  });
+  NOM_FIND.forEach((t,k) => items.push({id:'d2-f-'+k, unit:'d2', kind:'nfind', text:t}));
+  NOM_NUM.forEach((n,k) => items.push({id:'d2-z-'+k, unit:'d2', kind:'nnum', text:n[0], num:n[1]}));
+  NOM_PAIR.forEach((p,k) => items.push({id:'d2-p-'+k, unit:'d2', kind:'npair', noun:p[0], other:p[1], sol:p[2]}));
+  NOM_SALAD_N.forEach((p,k) => items.push({id:'d2-s-'+k, unit:'d2', kind:'nsalad', noun:p[0], sol:p[1]}));
+  NOM_V2N.forEach((p,k) => items.push({id:'d2-v-'+k, unit:'d2', kind:'nv2n', verb:p[0], noun:p[1]}));
+  NOM_COMP.forEach((p,k) => items.push({id:'d2-c-'+k, unit:'d2', kind:'ncomp', a:p[0], b:p[1], res:p[2], art:p[1].split(' ')[0]}));
+  NOM_SPLIT.forEach((p,k) => items.push({id:'d2-x-'+k, unit:'d2', kind:'nsplit', word:p[0], verb:p[1], noun:p[2]}));
+  NOM_IMAM.forEach((p,k) => items.push({id:'d2-i-'+k, unit:'d2', kind:'nimam', q:p[0], a:p[1], wrong:p[2]}));
+  return {id:'d2', subject:'Deutsch', name:'Grammatik', title:'Nomen', items};
+}
+const isNom = i => i && i.unit === 'd2';
+function nomLabel(i){
+  switch(i.kind){
+    case 'noun': return ART[i.g] + ' ' + i.w + (i.pl ? ' – die ' + i.pl : '');
+    case 'nfind': return i.text.replace(/\*/g,'');
+    case 'nnum': return i.text.replace(/\*\*/g,'');
+    case 'npair': return i.noun + ' – ' + i.other;
+    case 'nsalad': return i.noun;
+    case 'nv2n': return i.verb;
+    case 'ncomp': return i.a + ' + ' + i.b;
+    case 'nsplit': return i.word;
+    case 'nimam': return i.q;
+  } return '';
+}
+function nomSolution(i){
+  switch(i.kind){
+    case 'noun': return GENDER[i.g] + (i.pl ? ', Mehrzahl: die ' + i.pl : '');
+    case 'nfind': return 'Nomen: ' + (i.text.match(/\*[^*]+\*/g) || []).map(s => s.replace(/\*/g,'')).join(', ');
+    case 'nnum': return i.num === 'E' ? 'Einzahl' : 'Mehrzahl';
+    case 'npair': case 'nsalad': return i.sol;
+    case 'nv2n': return i.noun;
+    case 'ncomp': return i.art + ' ' + i.res;
+    case 'nsplit': return i.verb + ' + ' + i.noun;
+    case 'nimam': return i.a;
+  } return '';
+}
+function buildNomQ(item, forceType){
+  const b = st(item.id).b;
+  const q = {item, retry:false, de:true, nom:true};
+  let types;
+  if(item.kind === 'noun') types = item.pl ? (b <= 1 ? ['n_art','n_art','n_gender','n_pl','n_sg'] : ['n_pl','n_pl','n_sg','n_art','n_gender']) : ['n_art','n_gender'];
+  else types = [{nfind:'de_find', nnum:'n_num', npair:'n_pair', nsalad:'n_salad', nv2n:'n_v2n', ncomp:'n_comp', nsplit:'n_split', nimam:'n_imam'}[item.kind]];
+  q.type = forceType || types[Math.floor(Math.random()*types.length)];
+  const arts = ['der','die','das'];
+  switch(q.type){
+    case 'de_find':
+      q.tokens = item.text.split(' ').map(w => ({t:w.replace(/\*/g,'').toLowerCase(), orig:w.replace(/\*/g,''), verb:/\*/.test(w), sel:false}));
+      q.findHint = 'Tippe alle Nomen an'; q.skill = 'n_find'; q.sol = 'Richtig: ' + item.text.replace(/\*/g,''); break;
+    case 'n_art':
+      q.opts = arts.map(a => ({t:a, ok:a === ART[item.g]})); q.skill = 'n_art'; q.sol = ART[item.g] + ' ' + item.w; break;
+    case 'n_gender':
+      q.opts = ['m','f','n'].map(g => ({t:GENDER[g], ok:g === item.g})); q.skill = 'n_gender'; q.sol = ART[item.g] + ' ' + item.w + ' ist ' + GENDER[item.g] + '.'; break;
+    case 'n_pl':
+      q.answer = item.pl; q.keyboard = b >= 3;
+      if(!q.keyboard) q.opts = optsFrom(item.pl, plDistractors(item.w, item.pl), 4);
+      q.skill = item.hard ? 'n_pl_hard' : 'n_pl'; q.sol = ART[item.g] + ' ' + item.w + ' → die ' + item.pl; break;
+    case 'n_sg': {
+      const right = ART[item.g] + ' ' + item.w;
+      const wrong = arts.filter(a => a !== ART[item.g]).map(a => a + ' ' + item.w);
+      const alt = unUml(item.pl) !== item.w ? ART[item.g] + ' ' + unUml(item.pl) : ART[item.g] + ' ' + item.pl;
+      if(alt !== right) wrong.push(alt);
+      q.opts = optsFrom(right, wrong, 4); q.skill = 'n_sg'; q.sol = 'die ' + item.pl + ' → ' + right; break;
+    }
+    case 'n_num':
+      q.opts = [{t:'Einzahl', ok:item.num === 'E'}, {t:'Mehrzahl', ok:item.num === 'M'}]; q.skill = 'n_num'; q.sol = item.text.replace(/\*\*/g,'') + ' → ' + (item.num === 'E' ? 'Einzahl' : 'Mehrzahl'); break;
+    case 'n_pair':
+      q.opts = shuffle([{t:item.noun, ok:true}, {t:item.other, ok:false}]); q.skill = 'n_find'; q.sol = 'Das Nomen ist: ' + item.sol; break;
+    case 'n_salad':
+      q.opts = shuffle([{t:item.noun, ok:true}, ...shuffle(NOM_SALAD_X).slice(0,3).map(t => ({t, ok:false}))]); q.skill = 'n_find'; q.sol = 'Das Nomen ist: ' + item.sol; break;
+    case 'n_v2n': {
+      const w = item.noun.split(' ')[1];
+      const others = NOM_V2N.filter(p => p[1] !== item.noun).map(p => p[1]);
+      const wrong = arts.filter(a => a !== item.noun.split(' ')[0]).map(a => a + ' ' + w).concat([shuffle(others)[0]]);
+      q.opts = optsFrom(item.noun, wrong, 4); q.skill = 'n_v2n'; q.sol = item.verb + ' → ' + item.noun; break;
+    }
+    case 'n_comp': {
+      const right = item.art + ' ' + item.res;
+      q.answer = right; q.keyboard = b >= 3;
+      if(!q.keyboard) q.opts = arts.map(a => ({t:a + ' ' + item.res, ok:a === item.art}));
+      q.skill = 'n_comp'; q.sol = item.a + ' + ' + item.b + ' = ' + right + ' (Begleiter vom zweiten Wort)'; break;
+    }
+    case 'n_split': {
+      const nw = item.noun.split(' ')[1], na = item.noun.split(' ')[0];
+      const right = item.verb + ' + ' + item.noun;
+      const wrong = arts.filter(a => a !== na).map(a => item.verb + ' + ' + a + ' ' + nw);
+      q.opts = optsFrom(right, wrong, 3); q.skill = 'n_split'; q.sol = item.word + ' = ' + right; break;
+    }
+    case 'n_imam':
+      q.opts = shuffle([item.a, ...item.wrong]).map(t => ({t, ok:t === item.a})); q.skill = 'n_find'; q.sol = item.q.replace('?', item.a); break;
+  }
+  return q;
+}
+function renderNomQ(q, opts){
+  const it = q.item; let prompt = '', body = '';
+  const blank = '<span class="blank">___</span>';
+  const big = s => `<div class="qtext de">${s}</div>`;
+  const mid = s => `<div class="qtext de" style="font-size:clamp(22px,3.8vw,34px)">${s}</div>`;
+  const typeBox = (ph) => `<div class="panel qcard" style="min-height:0"><input id="typein" class="type-in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="${ph}" ${R.fb?'disabled':''} value="${esc(R.typed||'')}"></div>` + (R.fb ? '' : '<div class="actions"><button class="cta" data-a="check-spell">Prüfen</button></div>');
+  switch(q.type){
+    case 'n_art': prompt = `<div class="qhint">Welcher Begleiter passt?</div>${big(blank + ' ' + esc(it.w))}`; body = opts(); break;
+    case 'n_gender': prompt = `<div class="qhint">Welches Geschlecht hat das Nomen?</div>${big(esc(it.w))}`; body = opts(); break;
+    case 'n_pl': prompt = `<div class="qhint">Wie heisst die Mehrzahl?</div>${big(esc(ART[it.g] + ' ' + it.w) + ' → die ' + blank)}`; body = q.keyboard ? typeBox('Mehrzahl') : opts(); break;
+    case 'n_sg': prompt = `<div class="qhint">Wie heisst die Einzahl mit Begleiter?</div>${big('die ' + esc(it.pl))}`; body = opts(); break;
+    case 'n_num': prompt = `<div class="qhint">Einzahl oder Mehrzahl?</div>${/\*\*/.test(it.text) ? mid(esc(it.text).replace(/\*\*(.+?)\*\*/, '<b style="color:var(--orange-2)">$1</b>')) : big(esc(it.text))}`; body = opts(); break;
+    case 'n_pair': prompt = `<div class="qhint">Welches Wort ist das Nomen?</div>`; body = opts(); break;
+    case 'n_salad': prompt = `<div class="qhint">Welches Wort ist ein Nomen?</div>`; body = opts(); break;
+    case 'n_v2n': prompt = `<div class="qhint">Welches Nomen passt zum Verb?</div>${big(esc(it.verb) + ' → ?')}`; body = opts(); break;
+    case 'n_comp': prompt = `<div class="qhint">Setze die Nomen zusammen</div>${mid(esc(it.a) + ' + ' + esc(it.b))}`; body = q.keyboard ? typeBox('mit Begleiter') : opts(); break;
+    case 'n_split': prompt = `<div class="qhint">Welches Verb und welches Nomen stecken darin?</div>${big(esc(it.word))}`; body = opts('long'); break;
+    case 'n_imam': prompt = `<div class="qhint">Wie schreibt man das kurz?</div>${big(esc(it.q))}`; body = opts(); break;
+  }
+  return {prompt, body};
+}
+function renderNomCard(it){
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Karteikarten</h2><div class="pill num">${C.i+1} / ${C.deck.length}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <button class="panel qcard flash" data-a="flip" style="width:100%">
+    ${C.flipped
+      ? `<div class="qhint">${esc(it.w)}</div><div class="qtext de">${esc(ART[it.g] + ' ' + it.w)}</div><div class="muted" style="font-size:22px">Mehrzahl: die ${esc(it.pl || '–')} · ${GENDER[it.g]}</div>`
+      : `<div class="qhint">Begleiter und Mehrzahl? · Tippen zum Umdrehen</div><div class="qtext de">${esc(it.w)}</div>`}
+  </button>
+  <div class="actions">${C.flipped ? `<button class="cta sec2" data-a="card-no">Nochmal üben</button><button class="cta" data-a="card-yes">Gewusst</button>` : `<button class="cta blue" data-a="flip">Umdrehen</button>`}</div>`;
+}
+
+UNITS.push(buildDeUnit());
+UNITS.push(buildNomUnit());
+UNITS.push(buildNmgUnit());
+/* ---------------- Mathematik ---------------- */
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const fmtN = n => String(n);
+function numWordDe(n){
+  if(n === 1000) return 'tausend';
+  const ones = ['','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun'];
+  const teens = ['zehn','elf','zwölf','dreizehn','vierzehn','fünfzehn','sechzehn','siebzehn','achtzehn','neunzehn'];
+  const tens = ['','','zwanzig','dreissig','vierzig','fünfzig','sechzig','siebzig','achtzig','neunzig'];
+  const parts = [], h = Math.floor(n / 100), r = n % 100;
+  if(h) parts.push(h === 1 ? 'ein' : ones[h], 'hundert');
+  if(r){
+    if(r < 10) parts.push(ones[r]);
+    else if(r < 20) parts.push(teens[r - 10]);
+    else { const u = r % 10, t = Math.floor(r / 10); if(u) parts.push(u === 1 ? 'ein' : ones[u], 'und'); parts.push(tens[t]); }
+  }
+  return parts.join('-');
+}
+function nearNums(n, max){
+  max = max || 1000;
+  const s = String(n).padStart(3, '0'), c = [];
+  if(s.length === 3){ c.push(+(s[0]+s[2]+s[1]), +(s[1]+s[0]+s[2]), +(s[2]+s[1]+s[0])); }
+  c.push(n+1, n-1, n+10, n-10, n+100, n-100, n+9, n-9, n+11);
+  return [...new Set(c)].filter(x => x !== n && x >= 0 && x <= max);
+}
+const numOpts = (n, cands) => optsFrom(fmtN(n), (cands || nearNums(n)).map(fmtN), 4);
+function hzeSvg(n){
+  const H = Math.floor(n/100), Z = Math.floor(n/10) % 10, E = n % 10;
+  let x = 6, out = '';
+  for(let i=0;i<H;i++){ out += `<g transform="translate(${x} 10)"><rect width="56" height="56" fill="var(--panel-2)" stroke="var(--muted)" stroke-width="2"/>${[1,2,3,4,5,6,7,8,9].map(k => `<path d="M${k*5.6} 0V56M0 ${k*5.6}H56" stroke="var(--line)" stroke-width="1"/>`).join('')}</g>`; x += 64; }
+  if(Z){ for(let i=0;i<Z;i++){ out += `<g transform="translate(${x} 10)"><rect width="9" height="56" fill="var(--blue)" opacity=".85"/>${[1,2,3,4,5,6,7,8,9].map(k => `<path d="M0 ${k*5.6}H9" stroke="#0c2a6e" stroke-width="1"/>`).join('')}</g>`; x += 13; } x += 8; }
+  for(let i=0;i<E;i++){ out += `<rect x="${x + (i%3)*13}" y="${18 + Math.floor(i/3)*13}" width="9" height="9" fill="var(--orange)"/>`; }
+  if(E) x += 42;
+  return `<svg class="hze" viewBox="0 0 ${Math.max(x, 60)} 76" role="img" aria-label="Hunderterplatten, Zehnerstangen und Einerwürfel">${out}</svg>`;
+}
+function lineSvg(start, val){
+  const W = 600, pad = 30, step = (W - 2*pad) / 100;
+  let t = '';
+  for(let k=0;k<=100;k++){
+    const x = pad + k*step, len = k % 10 === 0 ? 22 : k % 5 === 0 ? 15 : 9;
+    t += `<line x1="${x}" y1="40" x2="${x}" y2="${40 - len}" stroke="var(--muted)" stroke-width="${k%10===0?2:1}"/>`;
+    if(k % 50 === 0) t += `<text x="${x}" y="64" text-anchor="middle" fill="var(--fg)" font-size="16" font-family="Lexend,sans-serif">${start + k}</text>`;
+  }
+  const ax = pad + (val - start)*step;
+  return `<svg class="numline" viewBox="0 0 ${W} 110" role="img" aria-label="Zahlenstrahl"><line x1="${pad-10}" y1="40" x2="${W-pad+10}" y2="40" stroke="var(--fg)" stroke-width="2"/>${t}<path d="M${ax} 72 l-9 16 h18 z" fill="var(--orange)"/><path d="M${ax} 70 V46" stroke="var(--orange)" stroke-width="3"/></svg>`;
+}
+const MFAM = {
+  hze_read:'Zahl aus Hundertern, Zehnern, Einern lesen', hze_build:'Zahl zerlegen (H, Z, E)', hze_riddle:'Zahlenrätsel H-Z-E', buendeln:'Bündeln',
+  stellenwert:'Stellenwert einer Ziffer', zahlwort:'Zahlwort → Zahl', zahlwort_rev:'Zahl → Zahlwort', compare:'Welche Zahl ist grösser?', order:'Zahlen ordnen',
+  nearest:'Welche Zahl ist am nächsten?', numline:'Zahlenstrahl', neighbors:'Nachbarzahlen', nachbarzehner:'Nachbarzehner', nachbarhunderter:'Nachbarhunderter',
+  middle:'Zahl in der Mitte', sequence:'Zahlenfolgen', erg_zehner:'Ergänzen auf den Zehner', erg_hunderter:'Ergänzen auf den Hunderter', diff:'Unterschied',
+  doublehalf:'Verdoppeln und Halbieren', money:'Geld bis 1000 Franken', plus:'Rechnen mit Hundertern'
+};
+function buildMathUnit(){
+  const items = Object.keys(MFAM).map(f => ({id:'m1-'+f, unit:'m1', kind:'mq', fam:f, group:f}));
+  return {id:'m1', subject:'Mathematik', name:'Zahlenraum', title:'Zahlen bis 1000', items};
+}
+const isMath = i => i && (i.unit === 'm1' || i.unit === 'm2');
+function buildMathQ(item, forceType){
+  if(item.unit === 'm2') return buildGeoQ(item);
+  const b = st(item.id).b, q = {item, retry:false, de:true, math:true, type:'m_'+item.fam};
+  const typed = (n) => { q.answer = String(n); if(b >= 3){ q.keyboard = true; } else q.opts = numOpts(n); };
+  let n;
+  switch(item.fam){
+    case 'hze_read': n = rnd(101, 999); if(Math.random() < .3) n = Math.floor(n/10)*10 + (Math.random()<.5 ? 0 : n%10); q.n = n; typed(n); q.prompt = 'Welche Zahl ist dargestellt?'; q.visual = hzeSvg(n); q.sol = n + ' = ' + Math.floor(n/100) + ' H + ' + (Math.floor(n/10)%10) + ' Z + ' + (n%10) + ' E'; break;
+    case 'hze_build': {
+      n = rnd(101, 999); const H = Math.floor(n/100), Z = Math.floor(n/10)%10, E = n%10;
+      const f = (h,z,e) => `${h} H + ${z} Z + ${e} E`;
+      const right = f(H,Z,E);
+      const wrong = [f(H,E,Z), f(Z,H,E), f(E,Z,H), f(H,Z,(E+1)%10), f(H,(Z+1)%10,E)].filter(x => x !== right);
+      q.opts = optsFrom(right, wrong, 4); q.prompt = 'Wie viele Hunderter, Zehner und Einer?'; q.big = String(n); q.sol = n + ' = ' + right + ' = ' + H*100 + ' + ' + Z*10 + ' + ' + E; break;
+    }
+    case 'hze_riddle': { const H = rnd(1,9), Z = rnd(0,9), E = rnd(0,9); n = H*100+Z*10+E; q.prompt = 'Zahlenrätsel'; q.mid = `Meine Zahl hat ${H} Hunderter, ${Z} Zehner und ${E} Einer.`; typed(n); q.sol = 'Die Zahl ist ' + n + '.'; break; }
+    case 'buendeln': {
+      const v = pick([() => { const z = rnd(10, 45); return [`${z} Zehnerstangen`, z*10]; }, () => { const h = rnd(1,5), z = rnd(10,25); return [`${h} Hunderterplatte${h>1?'n':''} und ${z} Zehnerstangen`, h*100+z*10]; }, () => { const h = rnd(1,4), e = rnd(12,58); return [`${h} Hunderterplatte${h>1?'n':''} und ${e} Einerwürfel`, h*100+e]; }, () => { const z = rnd(11,40), e = rnd(2,9); return [`${z} Zehnerstangen und ${e} Einerwürfel`, z*10+e]; }, () => [`10 Hunderterplatten`, 1000]])();
+      n = v[1]; q.prompt = 'Bündle und schreibe die Zahl auf'; q.mid = v[0]; typed(n); q.sol = v[0] + ' = ' + n; break;
+    }
+    case 'stellenwert': {
+      n = rnd(101, 999); const s = String(n), k = rnd(0,2), d = +s[k];
+      if(d === 0){ n += [100,10,1][k]; }
+      const s2 = String(n), dd = +s2[k], val = dd * [100,10,1][k];
+      q.mark = k; q.big = s2; q.prompt = 'Welchen Wert hat die markierte Ziffer?';
+      q.answer = String(val); q.opts = optsFrom(String(val), [dd*100, dd*10, dd, dd*1000].filter(x => x !== val).map(String), 4);
+      q.sol = s2 + ' → ' + val + ' (' + dd + ' ' + ['Hunderter','Zehner','Einer'][k] + ')'; break;
+    }
+    case 'zahlwort': n = rnd(101, 999); q.prompt = 'Welche Zahl ist das?'; q.mid = numWordDe(n); typed(n); q.sol = numWordDe(n) + ' = ' + n; break;
+    case 'zahlwort_rev': { n = rnd(101, 999); q.prompt = 'Wie liest man diese Zahl?'; q.big = String(n); const right = numWordDe(n); q.opts = optsFrom(right, nearNums(n).filter(x => x > 100 && x < 1000).map(numWordDe), 4); q.long = true; q.sol = n + ' = ' + right; break; }
+    case 'compare': {
+      const a = rnd(100, 999), s = String(a); let c = pick([+(s[0]+s[2]+s[1]), +(s[1]+s[0]+s[2]), a + pick([1,10,100,-1,-10,-100])]);
+      if(c === a || c < 10) c = a + 9; if(Math.random() < .12){ c = a * 10 + rnd(0,9); }
+      const mx = Math.max(a, c); q.prompt = 'Welche Zahl ist grösser?'; q.opts = shuffle([{t:String(a), ok:a === mx}, {t:String(c), ok:c === mx}]); q.sol = Math.max(a,c) + ' > ' + Math.min(a,c); break;
+    }
+    case 'order': {
+      const base = rnd(1, 8) * 100 + rnd(0, 60), set = new Set();
+      while(set.size < 4){ const s = String(base + rnd(0, 120)); set.add(+(pick([s, s[0]+s[2]+s[1]]))); }
+      const nums = [...set]; q.target = nums.slice().sort((x,y) => x-y).join(' ');
+      q.tiles = shuffle(nums).map(x => ({ch:String(x), used:false})); q.filled = []; q.prompt = 'Ordne die Zahlen: die kleinste zuerst'; q.sol = q.target.split(' ').join(' < '); break;
+    }
+    case 'nearest': {
+      const t = pick([300,500,820,1000,777,462,400,600,250,750]), c = shuffle([t + rnd(3,9), t - rnd(11,30), t + rnd(15,40)]);
+      const best = c.reduce((a,x) => Math.abs(x-t) < Math.abs(a-t) ? x : a);
+      q.prompt = 'Welche Zahl ist am nächsten bei ' + t + '?'; q.big = String(t); q.opts = c.map(x => ({t:String(x), ok:x === best})); q.sol = best + ' ist am nächsten bei ' + t + '.'; break;
+    }
+    case 'numline': { const start = rnd(0, 9) * 100, v = start + rnd(1, 19) * 5; q.prompt = 'Welche Zahl zeigt der Pfeil?'; q.visual = lineSvg(start, v); q.answer = String(v); q.opts = numOpts(v, [v+5, v-5, v+10, v-10, v+1].filter(x => x >= start && x <= start+100)); q.sol = 'Der Pfeil zeigt auf ' + v + '.'; break; }
+    case 'neighbors': { n = rnd(100, 998); const r = `${n-1} und ${n+1}`; q.prompt = 'Wie heissen die Nachbarzahlen?'; q.mid = `___ ${n} ___`; q.opts = optsFrom(r, [`${n-10} und ${n+10}`, `${n-1} und ${n+10}`, `${n-2} und ${n+2}`], 4); q.sol = `${n-1}, ${n}, ${n+1}`; break; }
+    case 'nachbarzehner': { do { n = rnd(101, 998); } while(n % 10 === 0); const lo = Math.floor(n/10)*10, r = `${lo} und ${lo+10}`; q.prompt = 'Zwischen welchen Zehnern liegt die Zahl?'; q.big = String(n); q.opts = optsFrom(r, [`${lo-10} und ${lo}`, `${Math.floor(n/100)*100} und ${Math.floor(n/100)*100+100}`, `${lo+10} und ${lo+20}`], 4); q.sol = `${lo} < ${n} < ${lo+10}`; break; }
+    case 'nachbarhunderter': { do { n = rnd(101, 998); } while(n % 100 === 0); const lo = Math.floor(n/100)*100, r = `${lo} und ${lo+100}`; q.prompt = 'Zwischen welchen Hundertern liegt die Zahl?'; q.big = String(n); q.opts = optsFrom(r, [`${lo-100} und ${lo}`, `${Math.floor(n/10)*10} und ${Math.floor(n/10)*10+10}`, `${lo+100} und ${lo+200}`].filter(x => !x.startsWith('-')), 4); q.sol = `${lo} < ${n} < ${lo+100}`; break; }
+    case 'middle': { const v = pick([() => { const a = rnd(0,8)*100; return [a, a+100]; }, () => { const a = rnd(0,18)*50; return [a, a+100]; }, () => { const a = rnd(10,97)*10; return [a, a+10]; }, () => { const a = rnd(0,5)*100; return [a, a+500]; }])(); n = (v[0]+v[1])/2; q.prompt = 'Welche Zahl liegt genau in der Mitte?'; q.mid = `zwischen ${v[0]} und ${v[1]}`; typed(n); q.sol = `${v[0]} … ${n} … ${v[1]}`; break; }
+    case 'sequence': {
+      const step = pick([1, 10, 50, 100, 25, 2, -1, -10]), s0 = step > 0 ? rnd(1, 80) * (Math.abs(step) >= 10 ? 10 : 1) : rnd(300, 990);
+      const seq = [0,1,2,3].map(k => s0 + k*step); n = s0 + 4*step;
+      if(n > 1000 || n < 0){ return buildMathQ(item); }
+      q.prompt = 'Wie geht die Zahlenfolge weiter?'; q.mid = seq.join(', ') + ', ___'; typed(n); q.sol = 'Immer ' + (step > 0 ? '+' : '−') + Math.abs(step) + ': ' + seq.join(', ') + ', ' + n; break;
+    }
+    case 'erg_zehner': { do { n = rnd(101, 989); } while(n % 10 === 0); const t = Math.ceil(n/10)*10; q.prompt = 'Ergänze auf den nächsten Zehner'; q.mid = `${n} + ___ = ${t}`; typed(t - n); q.answerNum = true; q.opts = b >= 3 ? null : numOpts(t-n, [t-n+1, t-n-1, 10-(t-n), t-n+10].filter(x => x > 0 && x !== t-n)); q.sol = `${n} + ${t-n} = ${t}`; break; }
+    case 'erg_hunderter': { do { n = rnd(11, 98) * 10; } while(n % 100 === 0); const t = Math.ceil(n/100)*100; q.prompt = 'Ergänze auf den nächsten Hunderter'; q.mid = `${n} + ___ = ${t}`; typed(t - n); q.opts = b >= 3 ? null : numOpts(t-n, [t-n+10, t-n-10, 100-(t-n), t-n+100].filter(x => x > 0 && x !== t-n)); q.sol = `${n} + ${t-n} = ${t}`; break; }
+    case 'diff': { const a = rnd(10, 60) * 10 + pick([0,0,5]), c = a + rnd(5, 45) * 10 + pick([0,5,9]); q.prompt = 'Wie gross ist der Unterschied?'; q.mid = `zwischen ${a} und ${c}`; typed(c - a); q.sol = `${c} − ${a} = ${c-a}`; break; }
+    case 'doublehalf': {
+      if(Math.random() < .5){ n = pick([rnd(1,49)*10, rnd(11,49), 125, 250, rnd(1,4)*100+rnd(1,4)*10]); q.prompt = 'Verdopple die Zahl (mal 2)'; q.big = String(n); typed(n*2); q.sol = `${n} + ${n} = ${n*2}`; }
+      else { n = pick([1000, 880, 720, 412, 500, 600, 260, 840, 480]) ; if(Math.random() < .5) n = rnd(5, 50) * 20; q.prompt = 'Halbiere die Zahl (durch 2)'; q.big = String(n); typed(n/2); q.sol = `${n} : 2 = ${n/2}`; }
+      break;
+    }
+    case 'money': {
+      const v = pick([() => { const note = pick([100, 50, 20, 10]); return [`Wie viele ${({100:'Hunderter',50:'Fünfziger',20:'Zwanziger',10:'Zehner'})[note]}noten sind 1000 Franken?`, 1000/note]; }, () => { const a = rnd(1,4)*100; return [`500 Franken = ${a} + ___ Franken`, 500-a]; }, () => { const c = rnd(1,9)*100; return [`${c} Rappen sind wie viele Franken?`, c/100]; }, () => { const k = rnd(2,9); return [`${k} Hunderternoten und 3 Zwanzigernoten sind wie viele Franken?`, k*100+60]; }])();
+      q.prompt = 'Geld'; q.mid = v[0]; typed(v[1]); q.sol = 'Antwort: ' + v[1]; break;
+    }
+    case 'plus': {
+      const v = pick([() => { const a = rnd(1,9)*100, c = rnd(1,9-a/100||1)*100; return [`${a} + ${c}`, a+c]; }, () => { const a = rnd(2,9)*100, c = rnd(1,a/100-1)*100; return [`${a} − ${c}`, a-c]; }, () => { const a = rnd(1,7)*100, c = rnd(1,2)*100, d = rnd(1,9)*10+rnd(0,9); return [`${a} + ${c} + ${d}`, a+c+d]; }, () => [`10 · 100`, 1000], () => { const a = rnd(11,12)*100, c = 100; return [`${a} − ${c}`, a-c]; }, () => { const a = rnd(2,9)*100; return [`${a} + 10 + 10 + ${rnd(1,9)}`.replace(/(\d+)$/, m => m), null]; }])();
+      if(v[1] === null){ const parts = v[0].split(' + ').map(Number); v[1] = parts.reduce((x,y) => x+y, 0); }
+      q.prompt = 'Rechne aus'; q.mid = v[0] + ' = ___'; typed(v[1]); q.sol = v[0] + ' = ' + v[1]; break;
+    }
+  }
+  return q;
+}
+/* --- Geometrie --- */
+const SHAPES2 = ['Quadrat','Rechteck','Kreis','Dreieck'];
+const BODIES = ['Würfel','Quader','Kugel','Zylinder','Kegel','Pyramide'];
+function shapeSvg(name){
+  const s = 'fill="rgba(192,132,252,.25)" stroke="#c084fc" stroke-width="3" stroke-linejoin="round"';
+  const d = 'stroke="#c084fc" stroke-width="2" stroke-dasharray="5 4" fill="none"';
+  const m = {
+    Quadrat:`<rect x="45" y="20" width="110" height="110" ${s}/>`,
+    Rechteck:`<rect x="20" y="40" width="160" height="80" ${s}/>`,
+    Kreis:`<circle cx="100" cy="75" r="58" ${s}/>`,
+    Dreieck:`<path d="M100 15 L170 135 H30 Z" ${s}/>`,
+    'Würfel':`<path d="M55 55 H135 V135 H55 Z" ${s}/><path d="M55 55 L80 30 H160 L135 55 Z" ${s}/><path d="M135 55 L160 30 V110 L135 135 Z" ${s}/>`,
+    Quader:`<path d="M30 70 H150 V130 H30 Z" ${s}/><path d="M30 70 L55 45 H175 L150 70 Z" ${s}/><path d="M150 70 L175 45 V105 L150 130 Z" ${s}/>`,
+    Kugel:`<circle cx="100" cy="75" r="58" ${s}/><ellipse cx="100" cy="75" rx="58" ry="16" ${d}/><circle cx="80" cy="52" r="10" fill="#fff" opacity=".35"/>`,
+    Zylinder:`<path d="M55 35 V115 A45 14 0 0 0 145 115 V35" ${s}/><ellipse cx="100" cy="35" rx="45" ry="14" ${s}/>`,
+    Kegel:`<path d="M100 15 L150 120 A50 15 0 0 1 50 120 Z" ${s}/><path d="M50 120 A50 15 0 0 1 150 120" ${d}/>`,
+    Pyramide:`<path d="M100 15 L40 115 L120 135 Z" ${s}/><path d="M100 15 L120 135 L165 105 Z" ${s}/><path d="M40 115 L85 90 L165 105" ${d}/><path d="M100 15 L85 90" ${d}/>`,
+  };
+  return `<svg class="geo" viewBox="0 0 200 150" role="img" aria-label="Form">${m[name]}</svg>`;
+}
+const GEO_MC = [
+  ['Wie viele Flächen hat ein Würfel?', '6', ['4','8','12'], 'koerper'],
+  ['Wie viele Ecken hat ein Würfel?', '8', ['6','4','12'], 'koerper'],
+  ['Wie viele Kanten hat ein Würfel?', '12', ['8','6','10'], 'koerper'],
+  ['Welche Form haben die Flächen eines Würfels?', 'Quadrate', ['Kreise','Dreiecke','Rechtecke, die nicht quadratisch sind'], 'koerper'],
+  ['Eine Schachtel sieht aus wie ein Quader. Welche Form haben ihre Flächen?', 'Rechtecke', ['Kreise','Dreiecke','nur Quadrate'], 'koerper'],
+  ['Du schneidest eine runde Schachtel (Zylinder) auf. Welche Formen findest du?', 'zwei Kreise und ein Rechteck', ['nur Dreiecke','sechs Quadrate','ein Kreis und vier Dreiecke'], 'koerper'],
+  ['Welcher Körper hat keine Ecken und keine Kanten?', 'Kugel', ['Würfel','Quader','Pyramide'], 'koerper'],
+  ['Welcher Körper kann gut rollen?', 'Kugel', ['Würfel','Quader','Pyramide'], 'koerper'],
+  ['Du faltest ein Quadrat von Ecke zu Ecke. Welche Form haben die zwei Teile?', 'Dreiecke', ['Rechtecke','Kreise','Quadrate'], 'flaeche'],
+  ['Du faltest ein Quadrat von Kante zu Kante. Welche Form haben die zwei Teile?', 'Rechtecke', ['Dreiecke','Kreise','Quadrate'], 'flaeche'],
+  ['Wie viele Ecken hat ein Dreieck?', '3', ['4','2','5'], 'flaeche'],
+  ['Wie viele Ecken hat ein Rechteck?', '4', ['3','5','6'], 'flaeche'],
+  ['Auf einem Spielwürfel ergeben gegenüberliegende Zahlen zusammen immer …', '7', ['6','10','12'], 'wuerfel'],
+  ['Die 3 ist vorne. Du kippst den Würfel einmal nach hinten und einmal nach rechts. Wo ist die 3 jetzt?', 'rechts', ['oben','unten','links'], 'wuerfel'],
+  ['Die 5 ist oben. Du kippst den Würfel einmal nach vorne. Wo ist die 5 jetzt?', 'vorne', ['hinten','unten','rechts'], 'wuerfel'],
+];
+const STONES = [{n:'blau', c:'#3b82f6'}, {n:'gelb', c:'#facc15'}, {n:'rot', c:'#ef4444'}, {n:'grün', c:'#22c55e'}];
+function buildGeoUnit(){
+  const items = [];
+  [...SHAPES2, ...BODIES].forEach(s => items.push({id:'m2-s-'+s, unit:'m2', kind:'geoshape', shape:s, group: SHAPES2.includes(s) ? 'flaeche' : 'koerper', mem:[s, SHAPES2.includes(s) ? 'Fläche' : 'Körper']}));
+  GEO_MC.forEach((g,k) => items.push({id:'m2-mc-'+k, unit:'m2', kind:'geomc', q:g[0], a:g[1], wrong:g[2], group:g[3]}));
+  ['lage3','lage3b','lage4','wuerfel7','lage_fix'].forEach(f => items.push({id:'m2-'+f, unit:'m2', kind:'geogen', fam:f, group: f === 'wuerfel7' ? 'wuerfel' : 'lage'}));
+  return {id:'m2', subject:'Mathematik', name:'Geometrie', title:'Raum & Lage', items};
+}
+function stonesHtml(arr){ return `<span class="stones">${arr.map(s => `<i style="background:${s.c}" title="${s.n}"></i>`).join('')}</span>`; }
+function buildGeoQ(item){
+  const q = {item, retry:false, de:true, math:true, geo:true};
+  if(item.kind === 'geoshape'){
+    const pool = SHAPES2.includes(item.shape) ? SHAPES2 : BODIES;
+    q.type = 'g_shape'; q.prompt = SHAPES2.includes(item.shape) ? 'Wie heisst diese Form?' : 'Wie heisst dieser Körper?'; q.visual = shapeSvg(item.shape);
+    q.opts = optsFrom(item.shape, pool.filter(x => x !== item.shape), 4); q.sol = 'Das ist ' + (['Kugel','Pyramide'].includes(item.shape) ? 'eine ' : item.shape === 'Würfel' || item.shape === 'Quader' || item.shape === 'Zylinder' || item.shape === 'Kegel' || item.shape === 'Kreis' ? 'ein ' : item.shape === 'Dreieck' || item.shape === 'Quadrat' || item.shape === 'Rechteck' ? 'ein ' : '') + item.shape + '.';
+    if(Math.random() < .35){ q.type = 'g_find'; q.prompt = 'Tippe auf: ' + item.shape; q.findOpts = shuffle([item.shape, ...shuffle(pool.filter(x => x !== item.shape)).slice(0,3)]); q.opts = q.findOpts.map(s => ({t:s, ok:s === item.shape, svg:shapeSvg(s)})); }
+    return q;
+  }
+  if(item.kind === 'geomc'){ q.type = 'g_mc'; q.prompt = 'Raum & Formen'; q.mid = item.q; q.opts = shuffle([item.a, ...item.wrong]).map(t => ({t, ok:t === item.a})); q.sol = item.a; return q; }
+  q.type = 'g_' + item.fam;
+  if(item.fam === 'wuerfel7'){ const n = rnd(1,6); q.prompt = 'Spielwürfel'; q.mid = `Welche Zahl liegt gegenüber der ${n}?`; q.opts = [1,2,3,4,5,6].filter(x => x !== n).slice(0,5).map(String); q.opts = optsFrom(String(7-n), q.opts.filter(x => x !== String(7-n)), 4); q.sol = `${n} + ${7-n} = 7`; return q; }
+  if(item.fam === 'lage_fix'){
+    const right = 'grosser Würfel – Kugel – Quader – kleiner Würfel';
+    q.prompt = 'In welcher Reihenfolge stehen die Körper?'; q.mid = 'Der grosse Würfel steht links von der Kugel. Der Quader steht zwischen dem kleinen Würfel und der Kugel. Der kleine Würfel steht rechts aussen.';
+    q.opts = optsFrom(right, ['Kugel – grosser Würfel – Quader – kleiner Würfel','grosser Würfel – Quader – Kugel – kleiner Würfel','kleiner Würfel – Quader – Kugel – grosser Würfel'], 4); q.long = true; q.sol = 'Von links: ' + right; return q;
+  }
+  const n = item.fam === 'lage4' ? 4 : 3;
+  const perm = shuffle(STONES.slice(0, n));
+  const clues = [];
+  if(n === 3){
+    const [A,B,C] = perm;
+    const variants = item.fam === 'lage3' ? [`Der ${B.n}e Stein liegt rechts vom ${A.n}en Stein.`, `Der ${B.n}e Stein liegt links vom ${C.n}en Stein.`] : [`Der ${C.n}e Stein liegt ganz rechts.`, `Der ${A.n}e Stein liegt links vom ${B.n}en Stein.`];
+    clues.push(...variants);
+  } else {
+    const [A,B,C,D] = perm;
+    clues.push(`Der ${A.n}e Stein liegt ganz links.`, `Der ${D.n}e Stein liegt ganz rechts.`, `Der ${B.n}e Stein liegt neben dem ${A.n}en Stein.`);
+  }
+  const fixAdj = s => s.replace(/grüne?n?/g, m => m).replace(/Der grün(e)? /,'Der grüne ');
+  q.prompt = 'Wie liegen die Steine? (von links nach rechts)'; q.mid = clues.map(fixAdj).join(' ');
+  const keyOf = p => p.map(s => s.n).join(',');
+  const wrongs = []; let guard = 0;
+  while(wrongs.length < 3 && guard++ < 50){ const p = shuffle(perm); if(keyOf(p) !== keyOf(perm) && !wrongs.some(w => keyOf(w) === keyOf(p))) wrongs.push(p); }
+  q.opts = shuffle([{p:perm, ok:true}, ...wrongs.map(p => ({p, ok:false}))]).map(o => ({t:keyOf(o.p), ok:o.ok, html:stonesHtml(o.p)}));
+  q.sol = 'Von links: ' + perm.map(s => s.n).join(', '); q.stones = true;
+  return q;
+}
+function renderMathQ(q, opts){
+  let prompt = `<div class="qhint">${esc(q.prompt)}</div>`, body = '';
+  if(q.visual && q.type !== 'g_find') prompt += `<div class="mvis">${q.visual}</div>`;
+  if(q.big){
+    if(q.mark != null) prompt += `<div class="qtext de">${[...q.big].map((d,k) => k === q.mark ? `<span class="mark">${d}</span>` : d).join('')}</div>`;
+    else prompt += `<div class="qtext de">${esc(q.big)}</div>`;
+  }
+  if(q.mid) prompt += `<div class="qtext de" style="font-size:clamp(${q.mid.length > 60 ? '19px,3vw,26px' : '24px,4vw,38px'})">${esc(q.mid).replace('___', '<span class="blank">___</span>')}</div>`;
+  if(q.type === 'm_order'){
+    body = `<div class="panel qcard" style="min-height:0"><div class="sentence">${q.filled.map((f,k) => `<button class="tile word" data-a="unfill" data-k="${k}" ${R.fb?'disabled':''}>${esc(q.tiles[f].ch)}</button>`).join('<span class="lt">&lt;</span>')}</div>
+      <div class="tiles">${q.tiles.map((t,i) => `<button class="tile word ${t.used?'used':''}" data-a="tile" data-i="${i}" ${R.fb?'disabled':''}>${esc(t.ch)}</button>`).join('')}</div></div>`;
+    if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell" ${q.filled.length === q.tiles.length ? '' : 'disabled'}>Prüfen</button></div>`;
+  } else if(q.keyboard){
+    body = `<div class="panel qcard" style="min-height:0"><input id="typein" class="type-in" inputmode="numeric" autocomplete="off" placeholder="Zahl" ${R.fb?'disabled':''} value="${esc(R.typed||'')}"></div>` + (R.fb ? '' : '<div class="actions"><button class="cta" data-a="check-spell">Prüfen</button></div>');
+  } else if(q.stones || q.type === 'g_find'){
+    body = `<div class="opts">${q.opts.map((o,i) => { let c = 'opt' + (q.type === 'g_find' ? ' pic' : ''); if(R.fb){ if(o.ok) c += ' ok'; else if(R.fb.pick === i) c += ' no'; } return `<button class="${c}" data-a="pick" data-i="${i}" ${R.fb?'disabled':''} aria-label="${esc(o.t)}">${o.svg || o.html}</button>`; }).join('')}</div>`;
+  } else body = opts(q.long ? 'long' : '');
+  return {prompt, body};
+}
+
+UNITS.push(buildMathUnit());
+UNITS.push(buildGeoUnit());
+const isEn = i => !!(i && (i.unit === 'u2' || i.unit === 'u3'));
+const ITEMS = {}; UNITS.forEach(u => u.items.forEach(i => ITEMS[i.id] = i));
+const unitById = id => UNITS.find(u => u.id === id);
+const byGroup = (u, ...g) => unitById(u).items.filter(i => g.includes(i.group)).map(i => i.id);
+const allOf = u => unitById(u).items.map(i => i.id);
+
+const GOALS = {
+  u2: [
+    {lvl:'Grund', t:'Ich kenne die Wörter für Menschen aus der Familie.', ids:() => byGroup('u2','family'), need:2},
+    {lvl:'Grund', t:'Ich kenne die Zahlen 1–100.', numbers:true},
+    {lvl:'Grund', t:'Ich kann über meine Familie reden und schreiben (Name und Alter).', ids:() => byGroup('u2','family','talk'), need:3},
+    {lvl:'Grund', t:'Ich kann die Wörter von Unit 2 richtig abschreiben.', ids:() => allOf('u2'), need:2},
+    {lvl:'Profi', t:'Ich kann die Wörter von Unit 2 richtig schreiben.', ids:() => allOf('u2'), need:5},
+    {lvl:'Profi', t:'Ich kann mehr über meine Familie erzählen (z.B. favourite colour).', ids:() => byGroup('u2','colour','talk'), need:4},
+  ],
+  u3: [
+    {lvl:'Grund', t:'Ich kann sagen, in welchem Monat ich Geburtstag habe, und andere danach fragen.', ids:() => ['u3-when-is-your-birthday','u3-my-birthday-is-in-march'], need:3},
+    {lvl:'Grund', t:'Ich kenne die Monate auf Englisch.', ids:() => byGroup('u3','months'), need:2},
+    {lvl:'Grund', t:'Ich kann die Monate auf Englisch schreiben.', ids:() => byGroup('u3','months'), need:4},
+    {lvl:'Grund', t:'Ich kann die Monate in der richtigen Reihenfolge aufzählen.', ids:() => byGroup('u3','months'), need:3},
+    {lvl:'Grund', t:'Ich kann sagen, was ich habe (I\'ve got a …).', ids:() => byGroup('u3','got'), need:3},
+    {lvl:'Grund', t:'Ich kann einen kurzen Brief lesen und verstehen.', ids:() => byGroup('u3','letter'), need:2},
+    {lvl:'Grund', t:'Ich kann einen kurzen Dankesbrief schreiben.', ids:() => byGroup('u3','letter'), need:4},
+    {lvl:'Grund', t:'Ich kann die Wörter von Unit 3 richtig abschreiben.', ids:() => allOf('u3'), need:2},
+    {lvl:'Profi', t:'Ich kann die Wörter von Unit 3 sogar richtig schreiben.', ids:() => allOf('u3'), need:5},
+    {lvl:'Profi', t:'Ich kann mein Geburtsdatum richtig sagen.', ids:() => [...byGroup('u3','months'),'u3-my-birthday-is-in-march'], need:4},
+  ]
+};
+GOALS.d1 = [
+  {lvl:'Grund', t:'Ich erkenne Verben in Sätzen.', skills:['find'], need:20},
+  {lvl:'Grund', t:'Ich finde die Grundform mit dem Satz «Ich kann …».', skills:['inf'], need:20},
+  {lvl:'Grund', t:'Ich kenne die 6 Personalformen (ich, du, er/sie/es, wir, ihr, sie).', skills:['person','pron'], need:25},
+  {lvl:'Grund', t:'Ich setze die richtige Endung ein.', skills:['end','conj_regel'], need:25},
+  {lvl:'Profi', t:'Ich kenne Verben, die den Vokal ändern (läufst, gibt, nimmt).', skills:['conj_unregel'], need:20},
+  {lvl:'Profi', t:'Ich kenne die Personalformen von haben und sein.', skills:['habensein'], need:15},
+  {lvl:'Profi', t:'Ich kenne dürfen, können, mögen, müssen, sollen, wollen.', skills:['modal'], need:15},
+];
+GOALS.n1 = [
+  {lvl:'Grund', t:'Ich kenne 6 Delfinarten und ihre wichtigsten Merkmale.', ids:() => unitById('n1').items.filter(i => i.kind === 'spfact').map(i => i.id), need:2},
+  {lvl:'Grund', t:'Ich kenne die Unterschiede zwischen Delfin und Fisch.', ids:() => byGroup('n1','leben'), need:2},
+  {lvl:'Grund', t:'Ich kenne die Körperteile eines Delfins.', ids:() => byGroup('n1','koerper'), need:2},
+  {lvl:'Grund', t:'Ich weiss, wie Delfine fressen, schlafen und sich verständigen.', ids:() => byGroup('n1','verhalten'), need:2},
+  {lvl:'Profi', t:'Ich kann zu jeder Delfinart mehrere Merkmale nennen.', ids:() => unitById('n1').items.filter(i => i.kind === 'species' || i.kind === 'spfact').map(i => i.id), need:4},
+  {lvl:'Grund', t:'Ich weiss, wo Delfine leben (Meer, Fluss, Süss- und Salzwasser).', ids:() => byGroup('n1','lebensraum'), need:2},
+  {lvl:'Grund', t:'Ich weiss, was Delfine fressen und wozu sie ihre Zähne brauchen.', ids:() => byGroup('n1','nahrung'), need:2},
+  {lvl:'Profi', t:'Ich weiss, was Delfine gefährdet (Netze, Lärm, Plastik, Öl).', ids:() => byGroup('n1','schutz'), need:3},
+];
+GOALS.d2 = [
+  {lvl:'Grund', t:'Ich erkenne Nomen und schreibe sie gross.', skills:['n_find'], need:25},
+  {lvl:'Grund', t:'Ich kenne den Begleiter (der, die, das) eines Nomens.', skills:['n_art'], need:25},
+  {lvl:'Grund', t:'Ich erkenne, ob ein Nomen in der Einzahl oder Mehrzahl steht.', skills:['n_num'], need:20},
+  {lvl:'Grund', t:'Ich kann die Mehrzahl und die Einzahl bilden.', skills:['n_pl','n_sg'], need:25},
+  {lvl:'Grund', t:'Ich kenne das grammatische Geschlecht (männlich, weiblich, sächlich).', skills:['n_gender'], need:20},
+  {lvl:'Profi', t:'Ich bilde die Mehrzahl mit Umlaut und Dopplung (Hut → Hüte, Ball → Bälle).', skills:['n_pl_hard'], need:15},
+  {lvl:'Profi', t:'Ich bilde zusammengesetzte Nomen und finde ihre Teile.', skills:['n_comp','n_split'], need:15},
+  {lvl:'Profi', t:'Ich finde zu einem Verb das passende Nomen (rechnen → die Rechnung).', skills:['n_v2n'], need:10},
+];
+GOALS.m1 = [
+  {lvl:'Grund', t:'Ich stelle Zahlen bis 1000 mit Hundertern, Zehnern und Einern dar.', ids:() => byGroup('m1','hze_read','hze_build','hze_riddle','buendeln'), need:3},
+  {lvl:'Grund', t:'Ich kenne den Stellenwert jeder Ziffer (H, Z, E).', ids:() => byGroup('m1','stellenwert'), need:3},
+  {lvl:'Grund', t:'Ich lese und schreibe Zahlwörter (vier-hundert-acht-und-siebzig).', ids:() => byGroup('m1','zahlwort','zahlwort_rev'), need:3},
+  {lvl:'Grund', t:'Ich vergleiche und ordne Zahlen bis 1000.', ids:() => byGroup('m1','compare','order','nearest'), need:3},
+  {lvl:'Grund', t:'Ich finde mich am Zahlenstrahl zurecht (Nachbarzahlen, Nachbarzehner, Mitte).', ids:() => byGroup('m1','numline','neighbors','nachbarzehner','nachbarhunderter','middle'), need:3},
+  {lvl:'Grund', t:'Ich zähle in Schritten und setze Zahlenfolgen fort.', ids:() => byGroup('m1','sequence'), need:4},
+  {lvl:'Profi', t:'Ich ergänze auf den nächsten Zehner und Hunderter.', ids:() => byGroup('m1','erg_zehner','erg_hunderter'), need:4},
+  {lvl:'Profi', t:'Ich verdopple, halbiere, rechne mit Geld und berechne Unterschiede.', ids:() => byGroup('m1','doublehalf','money','diff','plus'), need:4},
+];
+GOALS.m2 = [
+  {lvl:'Grund', t:'Ich erkenne Flächen: Quadrat, Rechteck, Kreis, Dreieck.', ids:() => byGroup('m2','flaeche'), need:2},
+  {lvl:'Grund', t:'Ich erkenne Körper: Würfel, Quader, Kugel, Zylinder, Kegel, Pyramide.', ids:() => byGroup('m2','koerper'), need:2},
+  {lvl:'Grund', t:'Ich beschreibe, wo etwas liegt (links, rechts, zwischen).', ids:() => byGroup('m2','lage'), need:3},
+  {lvl:'Profi', t:'Ich kenne den Spielwürfel und stelle mir das Kippen vor.', ids:() => byGroup('m2','wuerfel'), need:3},
+];
+const SKILL_NAMES = {n_find:'Nomen erkennen', n_art:'Begleiter', n_gender:'Geschlecht', n_num:'Einzahl / Mehrzahl erkennen', n_pl:'Mehrzahl bilden', n_pl_hard:'Mehrzahl mit Umlaut / Dopplung', n_sg:'Einzahl bilden', n_comp:'Nomen zusammensetzen', n_split:'Zusammengesetzte Nomen zerlegen', n_v2n:'Verb → Nomen', find:'Verben erkennen', inf:'Grundform finden', person:'Personalform bestimmen', pron:'Pronomen zuordnen', end:'Endungen', conj_regel:'Regelmässige Verben', conj_unregel:'Unregelmässige Verben', habensein:'haben und sein', modal:'Modalverben'};
+/* Karten auf der Startseite: eine Karte kann mehrere Units bündeln */
+const DECKS = [
+  {id:'en23', subject:'Englisch', label:'Unit 2 + 3', title:'About Me', units:['u2','u3']},
+  {id:'d1', subject:'Deutsch', label:'Grammatik', title:'Verben', units:['d1']},
+  {id:'d2', subject:'Deutsch', label:'Grammatik', title:'Nomen', units:['d2']},
+  {id:'n1', subject:'NMG', label:'Tiere', title:'Delfinarten', units:['n1']},
+  {id:'m1', subject:'Mathematik', label:'Zahlenraum', title:'Zahlen bis 1000', units:['m1']},
+  {id:'m2', subject:'Mathematik', label:'Geometrie', title:'Raum & Lage', units:['m2']},
+];
+const SUBJ = {
+  Englisch: {c:'#5b95ff', bg:'rgba(91,149,255,.16)', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M9 9v4M9 9h0M13 13v-4l3 4v-4" stroke-linecap="round"/></svg>'},
+  Deutsch: {c:'#f5c518', bg:'rgba(245,197,24,.16)', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-14 5 14M5 14h6"/><path d="M20 19v-5a2.5 2.5 0 0 0-5 0M15 16.5a2.5 2.5 0 1 0 5 0"/></svg>'},
+  Mathematik: {c:'#c084fc', bg:'rgba(192,132,252,.16)', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 4v6M4 7h6M14 7h6M4.5 15.5l5 5M9.5 15.5l-5 5M14 16h6M14 20h6"/></svg>'},
+  NMG: {c:'#2fd38a', bg:'rgba(47,211,138,.16)', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19l8-8"/></svg>'},
+};
+const deckOn = d => d.units.every(u => S.units.includes(u));
+function deckMastery(d){ const its = d.units.flatMap(u => unitById(u).items); return its.reduce((a,i) => a + st(i.id).b/5, 0) / its.length; }
+const STAGES = ['Startaufstellung','1. Gang','3. Gang','Vollgas'];
+
+const CARS = [
+  {name:'Rallye Turbo', ps:0, img:'cars/c01-rally.jpg', hp:160, kmh:200, acc:6.6, kg:970},
+  {name:'Muscle V8', ps:150, img:'cars/c02-muscle.jpg', hp:380, kmh:230, acc:5.9, kg:1600},
+  {name:'Argento Classico', ps:350, img:'cars/c03-classic.jpg', hp:240, kmh:240, acc:7.5, kg:1200, low:true},
+  {name:'Crema Classica', ps:600, img:'cars/c15-crema.jpg', hp:280, kmh:250, acc:6.8, kg:1250, low:true},
+  {name:'Sole Roadster', ps:900, img:'cars/c04-roadster.jpg', hp:485, kmh:265, acc:4.2, kg:1050},
+  {name:'Azzurro Sport', ps:1250, img:'cars/c13-azzurro.jpg', hp:360, kmh:275, acc:4.6, kg:1270},
+  {name:'Verde GT', ps:1650, img:'cars/c05-gt.jpg', hp:715, kmh:340, acc:3.4, kg:1700},
+  {name:'Bianco Speedster', ps:2100, img:'cars/c06-speedster.jpg', hp:520, kmh:290, acc:2.9, kg:790, low:true},
+  {name:'Bordeaux Turbo', ps:2600, img:'cars/c12-bordeaux.jpg', hp:600, kmh:320, acc:3.6, kg:1380},
+  {name:'Rame Leggenda', ps:3200, img:'cars/c14-rame.jpg', hp:480, kmh:324, acc:3.8, kg:1100},
+  {name:'Blu Fulmine', ps:3900, img:'cars/c07-blu.jpg', hp:640, kmh:325, acc:2.9, kg:1420},
+  {name:'Grigio Lime', ps:4700, img:'cars/c11-grigio.jpg', hp:830, kmh:330, acc:2.5, kg:1560, low:true},
+  {name:'Rosso Furioso', ps:5600, img:'cars/c08-rosso.jpg', hp:780, kmh:350, acc:2.8, kg:1550},
+  {name:'Viola Notte', ps:6600, img:'cars/c09-viola.jpg', hp:1000, kmh:360, acc:2.4, kg:1450},
+  {name:'Oro 01', ps:8000, img:'cars/c10-oro.jpg', hp:950, kmh:340, acc:2.3, kg:1030, low:true},
+];
+
+/* ---------------- Zahlen ---------------- */
+const ONES = ['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function numWord(n){
+  if(n === 100) return 'one hundred';
+  if(n < 20) return ONES[n];
+  const t = Math.floor(n/10), o = n%10;
+  return TENS[t] + (o ? '-' + ONES[o] : '');
+}
+function pickNumber(){
+  if(Math.random() < .25) return [14,40,19,90,67][Math.floor(Math.random()*5)]; // Zahlen vom Unit-2-Blatt
+  const r = Math.random();
+  if(r < .3) return 13 + Math.floor(Math.random()*7);            // teens
+  if(r < .45) return [20,30,40,50,60,70,80,90][Math.floor(Math.random()*8)];
+  if(r < .5) return 100;
+  return 1 + Math.floor(Math.random()*99);
+}
+
+/* ---------------- Speicher ---------------- */
+const LS_KEY = 'turbolearn-v1';
+const blank = () => ({v:1, ps:0, items:{}, days:{}, rounds:0, seconds:0, pin:null, sound:true, numbers:{r:0,w:0}, units:['u2','u3'], skills:{}, updatedAt:0});
+let S = blank();
+try { const raw = localStorage.getItem(LS_KEY); if(raw) S = Object.assign(blank(), JSON.parse(raw)); } catch(e) {}
+let db = null, docRef = null, writing = false, pendingWrite = false, saveTimer = null;
+
+function save(){
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushRemote, 900);
+}
+async function pushRemote(){
+  if(!docRef) return;
+  if(writing){ pendingWrite = true; return; }
+  writing = true;
+  try { await docRef.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if(e && e.code === 'unavailable'){ setTimeout(pushRemote, 1500 + Math.random()*1000); } }
+  writing = false;
+  if(pendingWrite){ pendingWrite = false; pushRemote(); }
+}
+async function connect(){
+  if(!window.claude || !window.claude.use) return;
+  try {
+    const [dbNs, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if(!dbNs || !user) return;
+    const id = await user.id();
+    if(!id) return;
+    db = dbNs;
+    docRef = db.doc('data/users/' + id + '/turbolearn');
+    const snap = await docRef.get();
+    if(snap.exists){
+      const remote = snap.data();
+      if((remote.updatedAt||0) > (S.updatedAt||0)){
+        S = Object.assign(blank(), JSON.parse(JSON.stringify(remote)));
+        try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch(e) {}
+        if(view.name === 'home' || view.name === 'garage') render();
+      } else if((S.updatedAt||0) > (remote.updatedAt||0)) pushRemote();
+    } else if(S.updatedAt) pushRemote();
+    syncState = 'online';
+    if(view.name === 'parents') render();
+  } catch(e){ syncState = 'offline'; }
+}
+let syncState = 'lokal';
+
+let downloadsNs = null;
+async function connectDownloads(){ if(!window.claude || !window.claude.use) return; try { downloadsNs = await window.claude.use('downloads'); } catch(e){ downloadsNs = null; } }
+let dictation = null;
+async function connectDictation(){
+  if(!window.claude || !window.claude.use) return;
+  try {
+    dictation = await window.claude.use('dictation');
+    if(dictation){
+      dictation.onPartial(({text}) => speakSess && speakSess.partial(text));
+      dictation.onFinal(({text}) => speakSess && speakSess.final(text));
+      dictation.onState(({state}) => speakSess && speakSess.state(state));
+      if(view.name === 'home') render();
+    }
+  } catch(e){ dictation = null; }
+}
+
+/* ---------------- Lernstand ---------------- */
+const st = id => (S.items[id] = S.items[id] || {b:0,r:0,w:0});
+const today = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const dayKey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function weekKey(d){ const t = new Date(d); t.setHours(0,0,0,0); t.setDate(t.getDate() - ((t.getDay()+6)%7)); return dayKey(t); }
+function streak(){
+  const d = new Date(); let count = 0; const used = {};
+  if(!S.days[dayKey(d)]) d.setDate(d.getDate()-1);
+  for(let i=0;i<400;i++){
+    const k = dayKey(d);
+    if(S.days[k]) count++;
+    else {
+      const w = weekKey(d);
+      if(used[w] || count === 0) break;
+      used[w] = true;
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return count;
+}
+const doneToday = () => !!S.days[today()];
+function goalProgress(g){
+  if(g.skills) return Math.min(1, g.skills.reduce((a,k) => a + ((S.skills[k]||{}).r||0), 0) / g.need);
+  if(g.numbers) return Math.min(1, S.numbers.r / 40);
+  const ids = g.ids(); if(!ids.length) return 0;
+  return ids.reduce((a,id) => a + Math.min(1, st(id).b / g.need), 0) / ids.length;
+}
+const stageOf = p => p >= 1 ? 4 : Math.min(3, 1 + Math.floor(p*3));
+function unitMastery(uid){
+  const its = unitById(uid).items;
+  return its.reduce((a,i) => a + st(i.id).b/5, 0) / its.length;
+}
+const carsUnlocked = () => CARS.filter(c => S.ps >= c.ps).length;
+const nextCar = () => CARS.find(c => S.ps < c.ps);
+const myCar = () => (S.fav != null && S.fav < carsUnlocked()) ? CARS[S.fav] : CARS[carsUnlocked()-1];
+const myCarIdx = () => CARS.indexOf(myCar());
+const PAINTS = [{h:0,r:0},{h:40,r:1},{h:90,r:3},{h:140,r:5},{h:190,r:8},{h:235,r:11},{h:285,r:15},{h:325,r:20}];
+function paintFilter(i){
+  const k = (S.paint || {})[i]; if(!k) return '';
+  const h = PAINTS[k].h, c = CARS[i];
+  return c.low ? `sepia(.9) saturate(3.2) hue-rotate(${h - 25}deg)` : `hue-rotate(${h}deg) saturate(1.15)`;
+}
+const QSTATS = [{k:'hp', label:'PS', unit:'PS', hi:true}, {k:'kmh', label:'Spitze', unit:'km/h', hi:true}, {k:'acc', label:'0–100 km/h', unit:'s', hi:false}, {k:'kg', label:'Gewicht', unit:'kg', hi:false}];
+const fmtStat = (st, v) => (st.k === 'acc' ? v.toFixed(1).replace('.', ',') : v.toLocaleString('de-CH')) + ' ' + st.unit;
+
+/* ---------------- Hilfen ---------------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const words = s => s.trim().split(/\s+/);
+const stripEnd = s => s.replace(/[.!?]+$/,'');
+const norm = s => stripEnd(String(s).replace(/[’‘`´]/g,"'").replace(/\s+/g,' ').trim());
+const isSentence = i => words(i.en).length >= 3;
+function acceptForms(en){
+  const base = norm(en); const f = [base];
+  if(/^an? /.test(base)) f.push(base.replace(/^an? /,''));
+  return f;
+}
+function weightedPick(pool, n){
+  const out = []; let p = pool.slice();
+  while(out.length < n && p.length){
+    const ws = p.map(i => { const s = st(i.id); return Math.pow(6 - s.b, 2) + (s.w > s.r ? 4 : 0) + (s.b === 0 ? 3 : 0); });
+    let r = Math.random() * ws.reduce((a,b)=>a+b,0), k = 0;
+    while(r > ws[k]) { r -= ws[k]; k++; }
+    out.push(p[k]); p.splice(k,1);
+  }
+  return out;
+}
+const poolItems = () => S.units.flatMap(u => unitById(u).items);
+
+/* ---------------- Ton ---------------- */
+let actx = null;
+function audio(){ if(!actx){ try { actx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} } if(actx && actx.state === 'suspended') actx.resume(); return actx; }
+function engine(){
+  if(!S.sound) return; const a = audio(); if(!a) return;
+  const t = a.currentTime, o = a.createOscillator(), o2 = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+  o.type = 'sawtooth'; o2.type = 'square';
+  o.frequency.setValueAtTime(70,t); o.frequency.exponentialRampToValueAtTime(260,t+.35); o.frequency.exponentialRampToValueAtTime(140,t+.7);
+  o2.frequency.setValueAtTime(35,t); o2.frequency.exponentialRampToValueAtTime(130,t+.35); o2.frequency.exponentialRampToValueAtTime(70,t+.7);
+  f.type = 'lowpass'; f.frequency.setValueAtTime(600,t); f.frequency.linearRampToValueAtTime(1800,t+.35); f.frequency.linearRampToValueAtTime(500,t+.7);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.22,t+.05); g.gain.exponentialRampToValueAtTime(.0001,t+.75);
+  o.connect(f); o2.connect(f); f.connect(g); g.connect(a.destination);
+  o.start(t); o2.start(t); o.stop(t+.8); o2.stop(t+.8);
+}
+function beep(freqs, dur, type){
+  if(!S.sound) return; const a = audio(); if(!a) return;
+  freqs.forEach((fq,i) => {
+    const t = a.currentTime + i*dur, o = a.createOscillator(), g = a.createGain();
+    o.type = type||'square'; o.frequency.value = fq;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.12,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dur*.95);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur);
+  });
+}
+const wrongSound = () => beep([220,165], .16, 'square');
+const fanfare = () => beep([523,659,784,1047,784,1047], .13, 'triangle');
+
+/* Vorlesen (amerikanisch) */
+let voice = null;
+function pickVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => v.lang === 'en-US' && /Samantha|Allison|Ava|Google US/i.test(v.name)) || vs.find(v => v.lang === 'en-US') || vs.find(v => /^en/.test(v.lang)) || null;
+}
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text, rate){
+  if(!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text).replace(/\//g,' or '));
+    u.lang = 'en-US'; if(voice) u.voice = voice; u.rate = rate || .85; u.pitch = 1;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+/* ---------------- Grafik ---------------- */
+const IC = {
+  ps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#ff7a00" stroke="#ff7a00"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4"/><path d="M5 4h14l-3 4 3 4H5" fill="#2f6dff" stroke="#2f6dff"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  on:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>',
+  off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="m23 9-6 6M17 9l6 6"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="#140800" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  spk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3" fill="#fff"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>',
+  logo:'<svg viewBox="0 0 40 40"><path d="M20 2 36 11v18L20 38 4 29V11z" fill="#0c2a6e" stroke="#2f6dff" stroke-width="2"/><path d="M22 8 12 22h7l-2 10 11-15h-7z" fill="#ff7a00"/></svg>',
+  race:'<svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3"><path d="M6 40V8" /><path d="M6 8h32l-6 8 6 8H6" fill="rgba(255,255,255,.25)"/></svg>',
+  mem:'<svg viewBox="0 0 48 48" fill="none" stroke="#2f6dff" stroke-width="3"><rect x="6" y="8" width="16" height="20" /><rect x="26" y="20" width="16" height="20" fill="rgba(47,109,255,.25)"/></svg>',
+  cards:'<svg viewBox="0 0 48 48" fill="none" stroke="#ff7a00" stroke-width="3"><rect x="10" y="10" width="28" height="22" transform="rotate(-8 24 21)"/><rect x="10" y="16" width="28" height="22" fill="rgba(255,122,0,.2)"/></svg>',
+  cmd:'<svg viewBox="0 0 48 48" fill="none" stroke="#22c77a" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="9" r="5"/><path d="M24 15v15M12 18l12 4 12-4M24 30l-8 12M24 30l8 12"/></svg>',
+  speakM:'<svg viewBox="0 0 48 48" fill="none" stroke="#ff4b5c" stroke-width="3" stroke-linecap="round"><rect x="18" y="5" width="12" height="24" rx="6"/><path d="M10 22a14 14 0 0 0 28 0M24 36v7"/></svg>',
+  paper:'<svg viewBox="0 0 48 48" fill="none" stroke="#5b95ff" stroke-width="3" stroke-linejoin="round"><path d="M12 6h18l8 8v28H12z" fill="rgba(91,149,255,.18)"/><path d="M30 6v8h8M18 24h14M18 31h14M18 38h9"/></svg>',
+  pen:'<svg viewBox="0 0 48 48" fill="none" stroke="#a78bff" stroke-width="3" stroke-linejoin="round"><path d="M10 38l4-12 20-20 8 8-20 20z" fill="rgba(167,139,255,.2)"/><path d="M30 10l8 8M10 38l12-4"/></svg>',
+  garage:'<svg viewBox="0 0 48 48" fill="none" stroke="#f2c200" stroke-width="3"><path d="M4 20 24 8l20 12v22H4z"/><path d="M12 42V26h24v16M12 32h24"/></svg>',
+};
+let carSeq = 0;
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16); let r = n>>16, g = (n>>8)&255, b = n&255;
+  const t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+  r = Math.round((t-r)*p + r); g = Math.round((t-g)*p + g); b = Math.round((t-b)*p + b);
+  return '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
+}
+const SHAPES = {
+  fastback: {
+    body:'M16 94 L18 80 Q20 74 32 72 L70 66 Q100 52 130 44 Q160 38 190 40 Q210 42 232 54 L268 64 L298 70 Q308 74 306 84 L304 94 Z',
+    glass:'M122 52 Q150 45 178 45 Q198 46 214 55 L228 62 L118 63 Z', intake:'M104 72 L140 67 L136 82 L110 84 Z', louver:true },
+  wedge: {
+    body:'M18 94 L20 78 Q22 72 34 70 L84 64 L128 48 Q150 40 178 40 L200 41 Q214 42 226 50 L262 62 L296 68 Q306 71 304 82 L302 94 Z',
+    glass:'M134 52 L178 44 L198 45 Q212 47 222 54 L250 64 L130 64 Z', intake:'M100 72 L142 66 L138 82 L106 84 Z', louver:true },
+  gt: {
+    body:'M16 94 L18 78 Q20 70 36 68 L66 64 Q84 48 108 44 L146 42 Q164 43 180 54 L206 62 L292 68 Q306 70 306 84 L304 94 Z',
+    glass:'M76 64 Q90 52 110 48 L144 46 Q158 47 172 56 L184 63 Z', intake:'M260 74 L282 73 L278 80 L262 80 Z', louver:false },
+  hyper: {
+    body:'M10 94 L12 80 Q14 74 30 72 L90 66 L130 52 Q152 44 178 44 L198 45 Q212 46 224 54 L264 66 L300 72 Q310 75 308 84 L306 94 Z',
+    glass:'M136 55 L178 47 L196 48 Q210 50 220 57 L248 67 L132 67 Z', intake:'M98 74 L144 68 L140 84 L104 86 Z', louver:true },
+};
+function car(c, locked){
+  if(c.img){ const pf = locked ? '' : paintFilter(CARS.indexOf(c)); return `<img class="car photo${locked ? ' locked' : ''}" ${pf ? `style="filter:${pf}"` : ''} src="${c.img}" alt="${locked ? 'Gesperrtes Auto' : esc(c.name)}" decoding="async">`; }
+  const k = 'cr' + (++carSeq), sh = SHAPES[c.shape] || SHAPES.fastback;
+  const base = locked ? '#1d2330' : c.body;
+  const wheel = (x) => {
+    if(locked) return `<g transform="translate(${x} 92)"><circle r="22" fill="#07080b"/><circle r="15" fill="#151a24"/></g>`;
+    const spoke = c.rim === 'black' ? '#30343c' : '#d9dee6';
+    let spokes = '';
+    for(let i=0;i<5;i++) spokes += `<path d="M-1.4 -3.5 L-3 -14.6 L3 -14.6 L1.4 -3.5 Z" fill="${spoke}" transform="rotate(${i*72})"/><path d="M-0.5 -4 L-1 -14 L0 -14 Z" fill="#fff" opacity=".35" transform="rotate(${i*72})"/>`;
+    return `<g transform="translate(${x} 92)">
+      <circle r="22" fill="#0a0a0c"/><circle r="20.3" fill="none" stroke="#2a2a30" stroke-width="1.4"/>
+      <circle r="15.6" fill="url(#${k}rim)"/>
+      <path d="M-3 -12.8 A13 13 0 0 1 10.5 -7.5 L7 -5 A8.5 8.5 0 0 0 -2 -8.4 Z" fill="${c.caliper}"/>
+      ${spokes}
+      <circle r="15.6" fill="none" stroke="${c.rim === 'black' ? '#3a3f48' : '#eef1f5'}" stroke-width="1"/>
+      <circle r="4" fill="${c.rim === 'black' ? '#1b1e23' : '#9aa1ad'}"/><circle r="1.6" fill="${c.acc === '#15171c' ? '#ff7a00' : c.acc}"/>
+    </g>`;
+  };
+  const wing = !c.wing || locked ? '' : c.shape === 'hyper'
+    ? `<path d="M8 50 L66 46 L66 52 L12 56 Z" fill="url(#${k}dark)"/><path d="M26 54 L31 54 L36 70 L29 70 Z M50 52 L55 52 L58 68 L52 68 Z" fill="#111317"/>`
+    : `<path d="M12 58 L56 55 L56 60 L16 63 Z" fill="url(#${k}dark)"/><path d="M30 61 L34 61 L38 70 L32 70 Z" fill="#111317"/>`;
+  const louver = sh.louver && !locked ? [0,1,2,3].map(i => `<path d="M${78+i*9} ${71-i*2} L${84+i*9} ${69-i*2}" stroke="#05070b" stroke-width="2" opacity=".55"/>`).join('') : '';
+  return `<svg class="car" viewBox="0 0 320 120" aria-hidden="true">
+  <defs>
+    <linearGradient id="${k}paint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${locked ? base : shade(base, .45)}"/>
+      <stop offset=".38" stop-color="${base}"/>
+      <stop offset=".72" stop-color="${locked ? base : shade(base, -.25)}"/>
+      <stop offset="1" stop-color="${locked ? base : shade(base, -.6)}"/>
+    </linearGradient>
+    <linearGradient id="${k}glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b4a66"/><stop offset=".45" stop-color="#0c1322"/><stop offset="1" stop-color="#05080f"/>
+    </linearGradient>
+    <linearGradient id="${k}dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0b0c0f"/></linearGradient>
+    <radialGradient id="${k}rim" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#3a3e46"/><stop offset="1" stop-color="#0c0d10"/></radialGradient>
+    <radialGradient id="${k}shadow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".75"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${k}tail" x1="0" x2="1"><stop offset="0" stop-color="#ff2a2a"/><stop offset="1" stop-color="#7a0000"/></linearGradient>
+    <clipPath id="${k}clip"><path d="${sh.body}"/></clipPath>
+  </defs>
+  <ellipse cx="160" cy="112" rx="156" ry="9" fill="url(#${k}shadow)"/>
+  ${wing}
+  <path d="${sh.body}" fill="url(#${k}paint)"/>
+  <g clip-path="url(#${k}clip)">
+    <circle cx="80" cy="92" r="27" fill="#050608"/><circle cx="248" cy="92" r="27" fill="#050608"/>
+    ${locked ? '' : `
+    <path d="M0 76 Q160 64 320 74 L320 78 Q160 68 0 80 Z" fill="#fff" opacity=".22"/>
+    <path d="M0 88 L320 86 L320 120 L0 120 Z" fill="#000" opacity=".35"/>
+    ${c.stripe ? `<path d="M0 82 L320 79 L320 82.5 L0 85.5 Z" fill="${c.acc}"/>` : ''}
+    <path d="${sh.intake}" fill="#05070b" opacity=".9"/>
+    ${louver}
+    <path d="M150 64 L156 90" stroke="#000" stroke-width="1" opacity=".3"/>
+    `}
+  </g>
+  <path d="${sh.glass}" fill="${locked ? '#141922' : `url(#${k}glass)`}"/>
+  ${locked ? '' : `<path d="${sh.glass}" fill="none" stroke="#000" stroke-width="1.2" opacity=".5"/>
+  <path d="M150 47 L162 46 L146 62 L134 62 Z" fill="#fff" opacity=".12"/>
+  <path d="M280 71 L303 75 L300 78.5 L278 75 Z" fill="#eef5ff"/><path d="M284 72.5 L298 75 L297 76.3 L283 74 Z" fill="#9fc3ff"/>
+  <path d="M13 79 L30 78 L29 82 L12 83 Z" fill="url(#${k}tail)"/>
+  <path d="M266 94 L306 92 L304 98 L264 99 Z" fill="${c.acc}"/>
+  <path d="M14 94 L50 94 L46 100 L17 100 Z" fill="#0b0c0f"/><path d="M24 95 L23 100 M32 95 L31 100 M40 95 L39 100" stroke="#3a3f48" stroke-width="1"/>
+  <path d="M106 94 L222 94 L220 98 L108 98 Z" fill="#0b0c0f"/>`}
+  ${wheel(80)}${wheel(248)}
+</svg>`;
+}
+function gauge(pct, big, small){
+  const cx = 100, cy = 100, R = 82, a0 = 150, sweep = 240;
+  const P = (a, r) => { const t = a*Math.PI/180; return [(cx + r*Math.cos(t)).toFixed(1), (cy + r*Math.sin(t)).toFixed(1)]; };
+  const arc = (from, to, r) => { const [x1,y1] = P(from,r), [x2,y2] = P(to,r); return `M${x1} ${y1} A${r} ${r} 0 ${to-from>180?1:0} 1 ${x2} ${y2}`; };
+  pct = Math.max(0, Math.min(1, pct));
+  let ticks = '';
+  for(let i=0;i<=10;i++){ const a = a0 + sweep*i/10, [x1,y1] = P(a,R-14), [x2,y2] = P(a, i%5===0 ? R-26 : R-20); ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${i>=8?'#ff4b5c':'#8e97ab'}" stroke-width="${i%5===0?3:2}"/>`; }
+  const na = a0 + sweep*pct, [nx,ny] = P(na, R-22);
+  return `<svg class="gauge" viewBox="0 0 200 172" role="img" aria-label="${esc(small)}">
+    <path d="${arc(a0, a0+sweep, R)}" stroke="#262e3d" stroke-width="10" fill="none"/>
+    ${pct > 0.005 ? `<path d="${arc(a0, a0+sweep*pct, R)}" stroke="url(#gg)" stroke-width="10" fill="none"/>` : ''}
+    <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#2f6dff"/><stop offset="1" stop-color="#ff7a00"/></linearGradient></defs>
+    ${ticks}
+    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#ff7a00" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="8" fill="#ff7a00"/>
+    <text x="100" y="146" text-anchor="middle" fill="#f3f5f9" font-family="Chakra Petch, sans-serif" font-weight="700" font-size="30">${esc(big)}</text>
+    <text x="100" y="166" text-anchor="middle" fill="#8e97ab" font-family="Lexend, sans-serif" font-size="11" letter-spacing="1.5">${esc(small)}</text>
+  </svg>`;
+}
+const gearsHtml = (p, label) => { const s = stageOf(p); return `<div class="gears">${[1,2,3,4].map(i => `<span class="${i<=s?'f':''}"></span>`).join('')}<em>${label || STAGES[s-1]}</em></div>`; };
+function turboFlash(text){
+  const d = document.createElement('div'); d.className = 'turbo'; d.textContent = text;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1200);
+}
+
+/* ---------------- Ansichten ---------------- */
+let view = {name:'home'};
+function go(v){ view = v; render(); window.scrollTo(0,0); }
+
+function topBar(){
+  return `<header class="top">
+    <button class="logo" data-a="home" aria-label="Zur Startseite">${IC.logo}<span><span class="t">Turbo</span><span class="l">Learn</span></span></button>
+    <div class="pill num" title="PS gesammelt">${IC.ps}${S.ps.toLocaleString('de-CH')} <small>PS</small></div>
+    <button class="icon-btn ghost" data-a="parents" aria-label="Eltern-Bereich">${IC.gear}</button>
+  </header>`;
+}
+let showMore = false;
+function renderHome(){
+  const nc = nextCar(), mc = myCar();
+  const pct = nc ? (S.ps - mc.ps)/(nc.ps - mc.ps) : 1;
+  const sel = u => S.units.includes(u);
+  const st0 = streak();
+  return `${topBar()}
+  <section class="panel hero2">
+    <button class="carbtn" data-a="garage" aria-label="Garage öffnen">${car(mc)}</button>
+    <div class="hero-info">
+      <h2>${esc(mc.name)}</h2>
+      ${nc ? `<div class="bar big"><i style="width:${Math.round(pct*100)}%"></i></div><div class="muted">Noch <b class="num" style="color:var(--fg)">${(nc.ps - S.ps).toLocaleString('de-CH')} PS</b> bis zum nächsten Auto</div>` : '<div class="muted">Alle Autos gesammelt!</div>'}
+      <div class="status ${doneToday()?'ok':''}">${doneToday() ? 'Tagesziel geschafft' : 'Heute noch 1 Runde fahren'}${st0 > 1 ? ' · ' + st0 + ' Tage in Folge' : ''}</div>
+    </div>
+  </section>
+
+  <section class="units2">${DECKS.map(d => { const on = deckOn(d), m = deckMastery(d); return `<button class="ucard ${on?'on':''}" data-a="unit" data-u="${d.id}" aria-pressed="${on}">
+      <span class="check">${IC.check}</span>
+      <span class="sbadge" style="color:${(SUBJ[d.subject]||{}).c};background:${(SUBJ[d.subject]||{}).bg}">${(SUBJ[d.subject]||{}).icon || ''}${esc(d.subject)}</span>
+      <span class="label">${esc(d.label)}</span>
+      <b>${esc(d.title)}</b>
+      <span class="bar"><i style="width:${Math.max(3, Math.round(m*100))}%;background:${(SUBJ[d.subject]||{}).c}"></i></span>
+    </button>`; }).join('')}</section>
+
+  <button class="go" data-a="start-race" ${S.units.length?'':'disabled'}><b>Los!</b><span>${S.units.length ? '10 Fragen' : 'Zuerst eine Unit antippen'}</span></button>
+
+  <button class="more-toggle" data-a="more" aria-expanded="${showMore}">${showMore ? 'Weniger anzeigen' : 'Mehr Spiele'}</button>
+  ${showMore ? `<section class="modes">
+    <button class="panel mode" data-a="start-memory" ${S.units.length?'':'disabled'}>${IC.mem.replace('<svg','<svg class="mi"')}<b>Memory</b></button>
+    <button class="panel mode" data-a="q-start">${IC.cards.replace('<svg','<svg class="mi"')}<b>Quartett</b></button>
+    <button class="panel mode" data-a="paper-choose">${IC.paper.replace('<svg','<svg class="mi"')}<b>Papier-Test</b></button>
+    <button class="panel mode" data-a="write-choose">${IC.pen.replace('<svg','<svg class="mi"')}<b>Schreiben</b></button>
+    <button class="panel mode" data-a="start-cards" ${S.units.length?'':'disabled'}>${IC.cards.replace('<svg','<svg class="mi"')}<b>Karten</b></button>
+    <button class="panel mode" data-a="start-cmd">${IC.cmd.replace('<svg','<svg class="mi"')}<b>Befehle</b></button>
+    ${dictation ? `<button class="panel mode" data-a="start-speak" ${S.units.length?'':'disabled'}>${IC.speakM.replace('<svg','<svg class="mi"')}<b>Sprechen</b></button>` : ''}
+    <button class="panel mode" data-a="garage">${IC.garage.replace('<svg','<svg class="mi"')}<b>Garage</b></button>
+  </section>` : ''}`;
+}
+
+function renderGarage(){
+  const mine = myCarIdx();
+  return `${topBar()}
+  <section class="sec"><h2>Deine Garage</h2><button class="cta sec2" data-a="home">Zurück</button></section>
+  <section class="panel qbanner">
+    <div><b>Autoquartett</b><span class="muted">Spiel mit deinen Autos gegen den Computer. Pokale: <b class="num" style="color:var(--fg)">${S.trophies || 0}</b></span></div>
+    <button class="cta" data-a="q-start">Spielen</button>
+  </section>
+  <section class="garage">${CARS.map((c,i) => {
+    const lock = S.ps < c.ps;
+    return `<div class="panel gcar ${lock?'lock':''} ${i===mine?'mine':''}">${car(c, lock)}
+      <div class="row" style="justify-content:space-between"><h3>${lock ? '???' : esc(c.name)}</h3>${i===mine?'<span class="badge">Lieblingsauto</span>':''}</div>
+      <div class="meta"><span>Ab ${c.ps.toLocaleString('de-CH')} PS</span><span>${lock ? 'noch ' + (c.ps - S.ps).toLocaleString('de-CH') + ' PS' : c.hp + ' PS · ' + c.kmh + ' km/h'}</span></div>
+      ${lock ? '' : `<div class="row gbtns">${i===mine ? '' : `<button class="cta sec2 small" data-a="fav" data-i="${i}">Lieblingsauto</button>`}<button class="cta sec2 small" data-a="paint" data-i="${i}">Lackieren</button></div>`}
+    </div>`; }).join('')}</section>`;
+}
+function renderPaint(){
+  const i = view.car, c = CARS[i], cur = (S.paint || {})[i] || 0;
+  return `${topBar()}
+  <section class="sec"><h2>Lackiererei</h2><button class="cta sec2" data-a="garage">Zurück zur Garage</button></section>
+  <section class="panel" style="display:flex;flex-direction:column;gap:16px;align-items:center">
+    <h3 style="font-size:28px;font-style:italic">${esc(c.name)}</h3>
+    <div style="width:min(560px,100%)">${car(c)}</div>
+    <div class="label">Wähle eine Farbe</div>
+    <div class="paints">${PAINTS.map((p,k) => {
+      const lock = S.rounds < p.r;
+      const pf = k === 0 ? '' : (c.low ? `sepia(.9) saturate(3.2) hue-rotate(${p.h - 25}deg)` : `hue-rotate(${p.h}deg) saturate(1.15)`);
+      return `<button class="pchip ${k===cur?'on':''} ${lock?'lock':''}" data-a="paint-set" data-k="${k}" ${lock?'disabled':''} aria-label="Farbe ${k+1}">
+        <img src="${c.img}" alt="" style="${pf ? 'filter:' + pf : ''}">
+        <span>${k === 0 ? 'Original' : lock ? 'ab ' + p.r + ' Runden' : 'Farbe ' + k}</span></button>`; }).join('')}</div>
+    <p class="note">Neue Farben schaltest du mit Lernrunden frei. Du hast ${S.rounds} ${S.rounds === 1 ? 'Runde' : 'Runden'} geschafft.</p>
+  </section>`;
+}
+
+/* ---------- Autoquartett ---------- */
+let Q = null;
+function startQuartett(){
+  const deck = shuffle(CARS.map((c,i) => i));
+  Q = {me:deck.filter((x,k) => k % 2 === 0), cpu:deck.filter((x,k) => k % 2 === 1), pot:[], turn:'me', pick:null, result:null, round:1, max:12};
+  go({name:'quartett'});
+  if(Q.turn === 'cpu') cpuPick();
+}
+function cpuPick(){
+  const c = CARS[Q.cpu[0]];
+  let best = QSTATS[0], bestScore = -1;
+  QSTATS.forEach(st => {
+    const vals = CARS.map(x => x[st.k]).sort((a,b) => a-b);
+    let rank = vals.indexOf(c[st.k]) / (vals.length - 1); if(!st.hi) rank = 1 - rank;
+    if(rank > bestScore){ bestScore = rank; best = st; }
+  });
+  Q.cpuChoice = best.k;
+}
+function qResolve(k){
+  const st = QSTATS.find(x => x.k === k), a = CARS[Q.me[0]][k], b = CARS[Q.cpu[0]][k];
+  const win = a === b ? 0 : (st.hi ? (a > b ? 1 : -1) : (a < b ? 1 : -1));
+  Q.pick = k; Q.result = win;
+  const mc = Q.me.shift(), cc = Q.cpu.shift();
+  if(win === 1){ Q.me.push(mc, cc, ...Q.pot); Q.pot = []; Q.turn = 'me'; engine(); }
+  else if(win === -1){ Q.cpu.push(cc, mc, ...Q.pot); Q.pot = []; Q.turn = 'cpu'; wrongSound(); }
+  else { Q.pot.push(mc, cc); }
+  Q.shown = [mc, cc];
+  render();
+}
+function qNext(){
+  Q.pick = null; Q.result = null; Q.shown = null; Q.cpuChoice = null; Q.round++;
+  if(!Q.me.length || !Q.cpu.length || Q.round > Q.max){
+    const won = Q.me.length > Q.cpu.length;
+    if(won){ S.trophies = (S.trophies || 0) + 1; save(); fanfare(); }
+    return go({name:'qend', won, me:Q.me.length, cpu:Q.cpu.length});
+  }
+  if(Q.turn === 'cpu') cpuPick();
+  render();
+}
+function qCard(i, who, open){
+  const c = CARS[i];
+  if(!open) return `<div class="qcardx back"><div class="qback">${IC.logo}<span>Computer</span></div></div>`;
+  const locked = S.ps < c.ps;
+  return `<div class="qcardx">
+    ${car(c)}
+    <div class="qname"><b>${esc(c.name)}</b>${locked ? '<span class="qlock">noch nicht in deiner Garage</span>' : ''}</div>
+    <div class="qstats">${QSTATS.map(st => {
+      let cls = 'qstat';
+      if(Q.pick === st.k) cls += Q.result === 0 ? ' tie' : ((who === 'me') === (Q.result === 1) ? ' win' : ' lose');
+      const can = who === 'me' && Q.turn === 'me' && !Q.pick;
+      return `<button class="${cls}" ${can ? `data-a="q-pick" data-k="${st.k}"` : 'disabled'}><span>${st.label}${st.hi ? '' : ' <small>(weniger gewinnt)</small>'}</span><b class="num">${fmtStat(st, c[st.k])}</b></button>`; }).join('')}</div>
+  </div>`;
+}
+function renderQuartett(){
+  const myTop = Q.shown ? Q.shown[0] : Q.me[0], cpuTop = Q.shown ? Q.shown[1] : Q.cpu[0];
+  let msg;
+  if(Q.pick){ const st = QSTATS.find(x => x.k === Q.pick); msg = Q.result === 1 ? `Gewonnen! Du bekommst die Karte.` : Q.result === -1 ? `Der Computer gewinnt diese Runde.` : `Unentschieden! Die Karten kommen in den Topf.`; msg = `<b>${st.label}:</b> ${msg}`; }
+  else msg = Q.turn === 'me' ? 'Du bist dran: Tippe auf deinen stärksten Wert.' : `Der Computer wählt <b>${QSTATS.find(x => x.k === Q.cpuChoice).label}</b>.`;
+  return `<div class="play-top"><button class="icon-btn" data-a="garage" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Autoquartett</h2><div class="pill num">Runde ${Math.min(Q.round, Q.max)} / ${Q.max}</div></div>
+  <section class="qscore"><span>Du <b class="num">${Q.me.length + (Q.shown && Q.result === 0 ? 0 : 0)}</b></span><span class="muted">Karten</span><span><b class="num">${Q.cpu.length}</b> Computer</span></section>
+  <section class="qboard">${qCard(myTop, 'me', true)}${qCard(cpuTop, 'cpu', !!Q.pick)}</section>
+  <section class="panel qmsg"><p>${msg}</p>
+    ${Q.pick ? '<button class="cta" data-a="q-next">Weiter</button>' : Q.turn === 'cpu' ? '<button class="cta blue" data-a="q-cpu">Aufdecken</button>' : ''}
+  </section>`;
+}
+function renderQEnd(){
+  const v = view;
+  return `${topBar()}
+  <section class="panel end">
+    <div class="label">Autoquartett</div>
+    <h2>${v.won ? 'Du hast gewonnen!' : v.me === v.cpu ? 'Unentschieden!' : 'Der Computer gewinnt.'}</h2>
+    <div class="big num">${v.me} : ${v.cpu}</div>
+    ${v.won ? `<div class="status ok" style="font-size:20px">+1 Pokal · du hast jetzt ${S.trophies}</div>` : '<p class="muted">Nächstes Mal klappt es!</p>'}
+    <div class="actions"><button class="cta" data-a="q-start">Nochmal spielen</button><button class="cta sec2" data-a="garage">Zur Garage</button></div>
+  </section>`;
+}
+
+/* ---------- Rennen ---------- */
+let R = null;
+function distractors(item, n, field){
+  const pool = poolItems().filter(i => i.id !== item.id && i[field] && i[field] !== item[field]);
+  const same = shuffle(pool.filter(i => i.kind === item.kind && (field !== 'img' || i.img)));
+  const rest = shuffle(pool.filter(i => !same.includes(i)));
+  const out = [], seen = new Set([item[field]]);
+  for(const i of [...same, ...rest]){ if(out.length >= n) break; if(!seen.has(i[field])){ seen.add(i[field]); out.push(i); } }
+  return out;
+}
+function buildQ(item, forceType){
+  if(item.kind === 'num') return buildNumQ(forceType);
+  if(isDe(item)) return buildDeQ(item, forceType);
+  if(isNmg(item)) return buildNmgQ(item, forceType);
+  if(isNom(item)) return buildNomQ(item, forceType);
+  if(isMath(item)) return buildMathQ(item, forceType);
+  const b = st(item.id).b; let types;
+  if(b <= 1) types = item.img ? ['pic','pic','mc_en_de','listen'] : ['mc_en_de','listen'];
+  else if(b === 2) types = isSentence(item) ? ['sentence','mc_de_en','listen'] : ['spell','mc_de_en','listen'];
+  else types = isSentence(item) ? ['sentence','sentence','spell'] : ['spell','spell','mc_de_en'];
+  if(item.group === 'months' && b >= 1) types = types.concat(['mon_next','mon_order']);
+  const type = forceType || types[Math.floor(Math.random()*types.length)];
+  const q = {item, type, retry:false};
+  if(type === 'mon_next'){
+    const k = MONTHS.indexOf(item.en), nx = MONTHS[(k+1)%12];
+    q.opts = optsFrom(nx, MONTHS.filter(m => m !== nx && m !== item.en), 4);
+    q.sol = 'After ' + item.en + ' comes ' + nx + '.'; q.say = item.en + ', ' + nx;
+  }
+  if(type === 'mon_order'){
+    const k = MONTHS.indexOf(item.en), start = Math.max(0, Math.min(8, k - Math.floor(Math.random()*4)));
+    const seq = MONTHS.slice(start, start+4);
+    q.target = seq.join(' '); q.tiles = shuffle(seq).map(w => ({ch:w, used:false})); q.filled = [];
+    q.sol = seq.join(', '); q.say = seq.join(', ');
+  }
+  if(type === 'pic'){ q.opts = shuffle([item, ...distractors(item, 3, 'img')]).map(i => ({t:i.img, ok:i.id===item.id})); }
+  else if(type === 'mc_en_de' || type === 'listen'){ q.opts = shuffle([item, ...distractors(item, 3, 'de')]).map(i => ({t:i.de, ok:i.id===item.id})); }
+  else if(type === 'mc_de_en'){ q.opts = shuffle([item, ...distractors(item, 3, 'en')]).map(i => ({t:i.en, ok:i.id===item.id})); }
+  else if(type === 'spell'){
+    q.target = norm(item.en);
+    q.keyboard = WRITE_MODE === 'keys' ? true : WRITE_MODE === 'tiles' ? false : (b >= 3 || words(q.target).length >= 3);
+    if(!q.keyboard){
+      const letters = [...q.target].filter(ch => ch !== ' ');
+      const extra = 'abcdefghijklmnopqrstuvwxyz'.split('').filter(ch => !letters.includes(ch));
+      q.tiles = shuffle([...letters, ...shuffle(extra).slice(0, letters.length > 8 ? 2 : 3)]).map(ch => ({ch, used:false}));
+      q.filled = [];
+    }
+  }
+  else if(type === 'sentence'){
+    q.target = norm(item.en);
+    q.tiles = shuffle(words(q.target)).map(w => ({ch:w, used:false}));
+    q.filled = [];
+  }
+  return q;
+}
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const AGE_PAIRS = [[4,14,40],[13,30,3],[14,40,4],[15,50,5],[16,60,6],[17,70,7],[18,80,8],[19,90,9],[30,13,3],[40,14,4],[50,15,5],[60,16,6],[70,17,7],[80,18,8],[90,19,9],[18,80,81],[80,18,88]];
+function buildNumQ(forceType){
+  let n = pickNumber();
+  const types = S.numbers.r >= 20 ? ['num_listen','num_read','num_write','num_age'] : ['num_listen','num_listen','num_read','num_age'];
+  const type = forceType || types[Math.floor(Math.random()*types.length)];
+  let ageSet = null;
+  if(type === 'num_age'){ ageSet = AGE_PAIRS[Math.floor(Math.random()*AGE_PAIRS.length)]; n = ageSet[0]; }
+  const q = {item:{kind:'num', id:'num', n, en:numWord(n)}, type, retry:false};
+  if(type === 'num_age'){
+    const words4 = [...new Set([n, ...ageSet.slice(1), n+1, n+2].map(numWord))].slice(0,4);
+    q.opts = shuffle(words4).map(t => ({t, ok: t === numWord(n)}));
+    q.sol = "I'm " + numWord(n) + ' years old.'; q.say = "I'm " + n + ' years old.';
+    return q;
+  }
+  if(type !== 'num_write'){
+    const set = new Set([n]);
+    const near = [n+10, n-10, n+1, n-1, (n%10)*10 + Math.floor(n/10), n+20];
+    for(const c of shuffle(near)){ if(set.size >= 4) break; if(c >= 1 && c <= 100) set.add(c); }
+    while(set.size < 4) set.add(1 + Math.floor(Math.random()*100));
+    q.opts = shuffle([...set]).map(x => ({t:String(x), ok:x===n}));
+  }
+  return q;
+}
+/* ---------- Papier-Test ---------- */
+let PT = null;
+function startPaper(dir){
+  let pool = poolItems().filter(isEn); if(!pool.length) pool = UNITS.filter(u => u.subject === 'Englisch').flatMap(u => u.items);
+  PT = {dir, items: weightedPick(pool, 9), shown:false, ok:new Set()};
+  R = {start:Date.now(), earned:0, results:null};
+  go({name:'paper'});
+}
+function renderPaperChoose(){
+  return `${topBar()}
+  <section class="panel end">
+    <div class="label">Englisch · Papier-Test</div>
+    <h2>Hol Papier und Stift!</h2>
+    <p class="muted" style="margin:0;max-width:520px">Du siehst 9 Wörter. Schreib die Übersetzung auf dein Papier. Dann tippst du auf «Auflösen» und vergleichst.</p>
+    <div class="actions">
+      <button class="cta" data-a="paper-go" data-d="de">Deutsch → Englisch</button>
+      <button class="cta blue" data-a="paper-go" data-d="en">Englisch → Deutsch</button>
+    </div>
+    <button class="more-toggle" data-a="home">Zurück</button>
+  </section>`;
+}
+function renderPaper(){
+  const q = it => PT.dir === 'de' ? it.de : it.en, a = it => PT.dir === 'de' ? it.en : it.de;
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Papier-Test</h2>${PT.shown ? `<div class="pill num">${PT.ok.size} / 9 richtig</div>` : ''}</div>
+  <p class="note">${PT.shown ? 'Vergleiche mit deinem Papier. Tippe auf jedes Wort, das du richtig geschrieben hast.' : (PT.dir === 'de' ? 'Schreib die Wörter auf Englisch auf dein Papier.' : 'Schreib die Wörter auf Deutsch auf dein Papier.')}</p>
+  <section class="pgrid">${PT.items.map((it,i) => `<button class="pcell ${PT.ok.has(i)?'ok':''}" ${PT.shown ? `data-a="paper-mark" data-i="${i}"` : 'disabled'}>
+      <span class="pn">${i+1}</span>${it.img ? `<span class="pimg">${it.img}</span>` : ''}<b>${esc(q(it))}</b>
+      ${PT.shown ? `<span class="pans">${esc(a(it))}</span>${PT.ok.has(i) ? '<span class="pchk">✓</span>' : ''}` : ''}
+    </button>`).join('')}</section>
+  <div class="actions">${PT.shown ? `<button class="cta" data-a="paper-done">Fertig</button>` : `<button class="cta blue" data-a="paper-show">Auflösen</button>`}</div>`;
+}
+function paperDone(){
+  PT.items.forEach((it,i) => { const s = st(it.id); if(PT.ok.has(i)){ s.r++; s.b = Math.min(5, s.b + 1); } else { s.w++; s.b = s.b > 1 ? 1 : s.b; } });
+  const ps = PT.ok.size * (PT.dir === 'de' ? 15 : 10);
+  S.ps += ps; R.earned = ps; R.firstOk = PT.ok.size; R.firstAll = 9; R.results = [];
+  save(); finishRound('paper');
+}
+let WRITE_MODE = null;
+function startWrite(mode){
+  WRITE_MODE = mode;
+  let pool = poolItems().filter(isEn);
+  if(!pool.length) pool = UNITS.filter(u => u.subject === 'Englisch').flatMap(u => u.items);
+  const picks = weightedPick(pool, 10);
+  const queue = picks.map(i => mode === 'tiles' && isSentence(i) ? buildQ(i, 'sentence') : buildQ(i, 'spell'));
+  R = {kind:'write', queue, idx:0, results:[], firstOk:0, firstAll:0, earned:0, combo:0, start:Date.now(), fb:null};
+  go({name:'race'});
+  setTimeout(() => { const inp = document.getElementById('typein'); if(inp) inp.focus(); }, 60);
+}
+function renderWriteChoose(){
+  return `${topBar()}
+  <section class="panel end">
+    <div class="label">Englisch · Schreib-Training</div>
+    <h2>Wie willst du schreiben?</h2>
+    <p class="muted" style="margin:0">10 Wörter und Sätze. Du siehst Deutsch und schreibst Englisch.</p>
+    <div class="actions">
+      <button class="cta blue" data-a="write-go" data-m="tiles">Mit Buchstaben</button>
+      <button class="cta" data-a="write-go" data-m="keys">Mit Tastatur</button>
+    </div>
+    <button class="more-toggle" data-a="home">Zurück</button>
+  </section>`;
+}
+function startRace(){
+  WRITE_MODE = null;
+  const pool = poolItems();
+  let n = 10, nums = 0;
+  if(S.units.includes('u2')) nums = 2;
+  const picks = weightedPick(pool, n - nums);
+  const items = shuffle([...picks, ...Array(nums).fill({kind:'num'})]);
+  R = {queue: items.map(i => buildQ(i)), idx:0, results:[], firstOk:0, firstAll:0, earned:0, combo:0, start:Date.now(), fb:null};
+  go({name:'race'});
+  speakCurrent();
+}
+function speakCurrent(){
+  const q = R && R.queue[R.idx]; if(!q) return;
+  if(['pic','mc_en_de','listen'].includes(q.type)) say(q.item.en);
+  if(q.type === 'num_listen') say(String(q.item.n));
+  if(q.type === 'num_read') {}
+}
+function renderRace(){
+  const q = R.queue[R.idx];
+  const segs = R.queue.map((x,i) => `<span class="${i < R.results.length ? (R.results[i] ? 'ok' : 'no') : i === R.idx ? 'cur' : ''}"></span>`).join('');
+  let prompt = '', body = '';
+  const it = q.item;
+  const spk = (txt) => `<button class="speak" data-a="say" data-t="${esc(txt)}">${IC.spk}Anhören</button>`;
+  const opts = (cls) => `<div class="opts">${q.opts.map((o,i) => {
+    let c = 'opt ' + (cls||'');
+    if(R.fb){ if(o.ok) c += ' ok'; else if(R.fb.pick === i) c += ' no'; }
+    return `<button class="${c}" data-a="pick" data-i="${i}" ${R.fb?'disabled':''}>${esc(o.t)}</button>`; }).join('')}</div>`;
+  if(q.de){ const d = renderDeQ(q, opts); prompt = d.prompt; body = d.body; }
+  else switch(q.type){
+    case 'pic':
+      prompt = `<div class="qhint">Welches Bild passt?</div><div class="qtext">${esc(it.en)}</div>${spk(it.en)}`;
+      body = opts('pic'); break;
+    case 'mc_en_de':
+      prompt = `<div class="qhint">Auf Deutsch?</div><div class="qtext">${esc(it.en)}</div>${spk(it.en)}`;
+      body = opts(); break;
+    case 'listen':
+      prompt = `<div class="qhint">Was hörst du?</div><button class="speak big" data-a="say" data-t="${esc(it.en)}">${IC.spk}Nochmal hören</button>`;
+      body = opts(); break;
+    case 'mc_de_en':
+      prompt = `<div class="qhint">Auf Englisch?</div>${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext de">${esc(it.de)}</div>`;
+      body = opts(); break;
+    case 'spell':
+      prompt = `<div class="qhint">Schreib es auf Englisch</div>${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext de">${esc(it.de)}</div>`;
+      if(q.keyboard){
+        body = `<div class="panel qcard" style="min-height:0"><input id="typein" class="type-in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Hier tippen" ${R.fb?'disabled':''} value="${esc(R.typed||'')}"></div>`;
+      } else {
+        let k = 0;
+        const slots = [...q.target].map(ch => {
+          if(ch === ' ') return '<span class="slot gap"></span>';
+          const f = q.filled[k]; const html = f !== undefined ? `<button class="slot f" data-a="unfill" data-k="${k}" ${R.fb?'disabled':''}>${esc(q.tiles[f].ch)}</button>` : '<span class="slot"></span>';
+          k++; return html; }).join('');
+        body = `<div class="panel qcard" style="min-height:0"><div class="slots">${slots}</div><div class="tiles">${q.tiles.map((t,i) => `<button class="tile ${t.used?'used':''}" data-a="tile" data-i="${i}" ${R.fb?'disabled':''}>${esc(t.ch)}</button>`).join('')}</div></div>`;
+      }
+      if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell">Prüfen</button></div>`;
+      break;
+    case 'sentence':
+      prompt = `<div class="qhint">Bau den Satz</div>${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext de" style="font-size:clamp(26px,4.5vw,40px)">${esc(it.de)}</div>`;
+      body = `<div class="panel qcard" style="min-height:0"><div class="sentence">${q.filled.map((f,k) => `<button class="tile word" data-a="unfill" data-k="${k}" ${R.fb?'disabled':''}>${esc(q.tiles[f].ch)}</button>`).join('')}</div>
+        <div class="tiles">${q.tiles.map((t,i) => `<button class="tile word ${t.used?'used':''}" data-a="tile" data-i="${i}" ${R.fb?'disabled':''}>${esc(t.ch)}</button>`).join('')}</div></div>`;
+      if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell" ${q.filled.length === q.tiles.length ? '' : 'disabled'}>Prüfen</button></div>`;
+      break;
+    case 'mon_next':
+      prompt = `<div class="qhint">Welcher Monat kommt danach?</div><div class="qtext">${esc(it.en)} → ?</div>`;
+      body = opts(); break;
+    case 'mon_order':
+      prompt = `<div class="qhint">Bring die Monate in die richtige Reihenfolge</div>`;
+      body = `<div class="panel qcard" style="min-height:0"><div class="sentence">${q.filled.map((f,k) => `<button class="tile word" data-a="unfill" data-k="${k}" ${R.fb?'disabled':''}>${esc(q.tiles[f].ch)}</button>`).join('')}</div>
+        <div class="tiles">${q.tiles.map((t,i) => `<button class="tile word ${t.used?'used':''}" data-a="tile" data-i="${i}" ${R.fb?'disabled':''}>${esc(t.ch)}</button>`).join('')}</div></div>`;
+      if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell" ${q.filled.length === q.tiles.length ? '' : 'disabled'}>Prüfen</button></div>`;
+      break;
+    case 'num_age':
+      prompt = `<div class="qhint">Wie schreibt man die Zahl?</div><div class="qtext" style="font-size:clamp(28px,5vw,44px)">I'm <span class="blank">___</span> years old.</div><div class="qtext" style="font-size:60px;color:var(--orange-2)">${it.n}</div>`;
+      body = opts(); break;
+    case 'num_listen':
+      prompt = `<div class="qhint">Welche Zahl hörst du?</div><button class="speak big" data-a="say" data-t="${it.n}">${IC.spk}Nochmal hören</button>`;
+      body = opts(); break;
+    case 'num_read':
+      prompt = `<div class="qhint">Welche Zahl ist das?</div><div class="qtext">${esc(it.en)}</div>`;
+      body = opts(); break;
+    case 'num_write':
+      prompt = `<div class="qhint">Schreib die Zahl auf Englisch</div><div class="qtext" style="font-size:72px">${it.n}</div>`;
+      body = `<div class="panel qcard" style="min-height:0"><input id="typein" class="type-in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="z.B. forty-two" ${R.fb?'disabled':''} value="${esc(R.typed||'')}"></div>`;
+      if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell">Prüfen</button></div>`;
+      break;
+  }
+  let fb = '';
+  if(R.fb){
+    fb = R.fb.ok
+      ? `<div class="fb"><h3>${esc(R.fb.title)} <span class="ps">+${R.fb.ps} PS</span></h3><button class="cta" data-a="next">Weiter</button></div>`
+      : `<div class="fb no"><div><h3>Nicht ganz!</h3><p>Richtig ist: <b>${esc(R.fb.sol)}</b></p></div><button class="cta" data-a="next">Weiter</button></div>`;
+  }
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Rennen beenden">${IC.x}</button><div class="segs">${segs}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <section class="panel qcard">${prompt}</section>
+  ${body}
+  ${fb}`;
+}
+function answer(ok, extra){
+  const q = R.queue[R.idx];
+  const it = q.item;
+  let ps = 0;
+  if(it.kind === 'num'){
+    if(!q.retry){ ok ? S.numbers.r++ : S.numbers.w++; }
+  } else if(!q.retry){
+    const s = st(it.id);
+    if(ok){ s.b = Math.min(5, s.b + 1); s.r++; }
+    else { s.b = s.b > 1 ? 1 : s.b; s.w++; }
+  }
+  if(ok){
+    R.combo++;
+    ps = q.retry ? 5 : (['spell','sentence','num_write','de_find','mon_order'].includes(q.type) || q.keyboard ? 15 : 10);
+    if(R.combo >= 3 && !q.retry){ ps += 5; }
+    R.earned += ps; S.ps += ps;
+    engine();
+    if(R.combo === 3 || R.combo === 6 || R.combo === 9) turboFlash(R.combo === 3 ? 'TURBO!' : R.combo + 'er-Serie!');
+  } else {
+    R.combo = 0;
+    wrongSound();
+  }
+  if(!ok && !q.retry){
+    const again = buildQ(it.kind === 'num' ? {kind:'num'} : it, q.type);
+    if(it.kind === 'num'){ again.item = it; if(again.opts){ again.opts = shuffle(q.opts.map(o => ({...o}))); } }
+    again.retry = true;
+    R.queue.push(again);
+  }
+  R.results.push(ok);
+  if(!q.retry){ R.firstAll++; if(ok) R.firstOk++; }
+  if(q.skill && !q.retry){ const sk = (S.skills[q.skill] = S.skills[q.skill] || {r:0,w:0}); ok ? sk.r++ : sk.w++; }
+  const solText = (q.de || q.sol) ? q.sol : it.kind === 'num' ? (q.type === 'num_write' ? it.en : it.n + ' = ' + it.en) : (q.type === 'mc_en_de' || q.type === 'listen' || q.type === 'pic' ? it.en + ' = ' + it.de : it.en);
+  const praise = ['Stark!','Vollgas!','Perfekt!','Super!','Genau!'];
+  R.fb = {ok, ps, pick: extra && extra.pick, sol: q.de ? (ok ? '' : q.sol) : ok ? (q.type === 'pic' || q.type === 'listen' ? it.en + ' = ' + it.de : '') : solText, say: q.say || (it.kind === 'num' ? String(it.n) : it.en), title: praise[Math.floor(Math.random()*praise.length)]};
+  save();
+  render();
+  if(q.de) return;
+  const sayTxt = q.say || (it.kind === 'num' ? String(it.n) : it.en);
+  if(ok && ['spell','sentence','num_write','mc_de_en','mon_next','mon_order','num_age'].includes(q.type)) setTimeout(() => say(sayTxt), 350);
+  if(!ok) setTimeout(() => say(sayTxt), 350);
+}
+function nextQ(){
+  R.fb = null; R.typed = '';
+  R.idx++;
+  if(R.idx >= R.queue.length) return finishRound(R.kind || 'race');
+  render(); speakCurrent();
+  const inp = document.getElementById('typein'); if(inp) setTimeout(() => inp.focus(), 50);
+}
+function finishRound(kind, extraPs){
+  const secs = Math.round((Date.now() - (R ? R.start : Date.now()))/1000);
+  const before = carsUnlocked();
+  const firstToday = !doneToday();
+  let bonus = 20 + (extraPs||0);
+  if(firstToday) bonus += 30;
+  S.ps += bonus; S.rounds++; S.seconds += Math.min(secs, 1800); S.days[today()] = true;
+  save();
+  const after = carsUnlocked();
+  const total = (R ? R.earned : 0) + bonus;
+  const right = R && R.results ? R.firstOk : 0;
+  const all = R && R.results ? R.firstAll : 0;
+  go({name:'end', kind, total, bonus, firstToday, newCar: after > before ? CARS[after-1] : null, right, all});
+  if(after > before) fanfare(); else engine();
+}
+function renderEnd(){
+  const v = view;
+  return `${topBar()}
+  <section class="panel end">
+    ${v.newCar ? `<div class="label">Neues Auto!</div><h2>${esc(v.newCar.name)}</h2>${car(v.newCar)}` : `<h2>Geschafft!</h2>${car(myCar())}`}
+    <div class="big num">+${v.total} PS</div>
+    ${v.all ? `<div class="muted" style="font-size:18px">${v.right} von ${v.all} sofort richtig</div>` : ''}
+    ${v.firstToday ? '<div class="status ok" style="font-size:18px">Tagesziel geschafft</div>' : ''}
+    <div class="actions"><button class="cta" data-a="again" data-k="${v.kind}">Nochmal</button><button class="cta sec2" data-a="home">Fertig</button></div>
+  </section>`;
+}
+
+/* ---------- Memory ---------- */
+let M = null;
+function startMemory(){
+  const memOk = i => i.kind === 'verb' || i.mem || (isEn(i) && i.en.length <= 16 && i.de.length <= 18);
+  let pool = poolItems().filter(memOk); if(pool.length < 6) pool = pool.concat(UNITS.flatMap(u => u.items).filter(memOk));
+  const pick = weightedPick(pool, 6);
+  const cards = shuffle(pick.flatMap(i => {
+    if(i.mem) return [{id:i.id, side:'en', t:i.mem[0], nosay:true}, {id:i.id, side:'de', t:i.mem[1]}];
+    if(i.kind === 'verb'){ const p = 1 + Math.floor(Math.random()*5); return [{id:i.id, side:'en', t:i.inf, nosay:true}, {id:i.id, side:'de', t:DE_PRON[p] + ' ' + i.forms[p]}]; }
+    return [{id:i.id, side:'en', t:i.en}, {id:i.id, side:'de', t:i.de}]; }));
+  M = {cards, open:[], done:new Set(), moves:0, lock:false};
+  R = {start:Date.now(), earned:0, results:null};
+  go({name:'memory'});
+}
+function renderMemory(){
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Memory</h2><div class="pill num">Züge ${M.moves}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <p class="note">Finde die Paare.</p>
+  <section class="mem">${M.cards.map((c,i) => {
+    const open = M.open.includes(i) || M.done.has(c.id);
+    return `<button class="mcard ${c.side} ${open?'open':''} ${M.done.has(c.id)?'done':''}" data-a="mem" data-i="${i}" ${M.done.has(c.id)?'disabled':''}>${open ? esc(c.t) : IC.logo.replace('<svg','<svg class="back"')}</button>`; }).join('')}</section>`;
+}
+function memTap(i){
+  if(M.lock || M.open.includes(i)) return;
+  const c = M.cards[i];
+  if(c.side === 'en' && !c.nosay) say(c.t);
+  M.open.push(i);
+  if(M.open.length === 2){
+    M.moves++;
+    const [a,b] = M.open.map(k => M.cards[k]);
+    if(a.id === b.id){
+      M.done.add(a.id); M.open = []; R.earned += 5; S.ps += 5;
+      const s = st(a.id); s.r++; if(s.b < 2) s.b++;
+      engine(); save();
+      if(M.done.size === 6){ render(); return setTimeout(() => finishRound('memory'), 700); }
+    } else {
+      M.lock = true;
+      setTimeout(() => { M.open = []; M.lock = false; render(); }, 1100);
+    }
+  }
+  render();
+}
+
+/* ---------- Karteikarten ---------- */
+let C = null;
+function startCards(){
+  const cardOk = i => isEn(i) || i.kind === 'verb' || i.kind === 'species' || i.kind === 'noun';
+  let cpool = poolItems().filter(cardOk); if(!cpool.length) cpool = UNITS.flatMap(u => u.items).filter(cardOk);
+  const deck = weightedPick(cpool, 10);
+  C = {deck, i:0, flipped:false, known:0};
+  R = {start:Date.now(), earned:0, results:null};
+  go({name:'cards'}); if(isEn(deck[0])) say(deck[0].en);
+}
+function renderCards(){
+  const it = C.deck[C.i];
+  if(isDe(it)) return renderDeCard(it);
+  if(isNmg(it)) return renderNmgCard(it);
+  if(isNom(it)) return renderNomCard(it);
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Karteikarten</h2><div class="pill num">${C.i+1} / ${C.deck.length}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <button class="panel qcard flash" data-a="flip" style="width:100%">
+    ${C.flipped
+      ? `<div class="qhint">Deutsch</div>${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext de">${esc(it.de)}</div><div class="muted">${esc(it.en)}</div>`
+      : `<div class="qhint">Englisch · Tippen zum Umdrehen</div><div class="qtext">${esc(it.en)}</div>`}
+  </button>
+  <div class="actions">
+    <button class="speak" data-a="say" data-t="${esc(it.en)}">${IC.spk}Anhören</button>
+    ${C.flipped ? `<button class="cta sec2" data-a="card-no">Nochmal üben</button><button class="cta" data-a="card-yes">Gewusst</button>` : `<button class="cta blue" data-a="flip">Umdrehen</button>`}
+  </div>`;
+}
+function renderNmgCard(it){
+  const sp = spOf(it.sp);
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Karteikarten</h2><div class="pill num">${C.i+1} / ${C.deck.length}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <button class="panel qcard flash" data-a="flip" style="width:100%">
+    ${C.flipped
+      ? `<div class="qhint">${esc(sp.name)}</div><ul class="factlist">${sp.facts.map(f => `<li>${esc(capFirst(f))}</li>`).join('')}</ul>`
+      : `<div class="qhint">Was weisst du über diesen Delfin? · Tippen zum Umdrehen</div><div class="qtext de">${esc(sp.name)}</div>`}
+  </button>
+  <div class="actions">${C.flipped ? `<button class="cta sec2" data-a="card-no">Nochmal üben</button><button class="cta" data-a="card-yes">Gewusst</button>` : `<button class="cta blue" data-a="flip">Umdrehen</button>`}</div>`;
+}
+function renderDeCard(it){
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Karteikarten</h2><div class="pill num">${C.i+1} / ${C.deck.length}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <button class="panel qcard flash" data-a="flip" style="width:100%">
+    ${C.flipped
+      ? `<div class="qhint">${esc(it.inf)}</div><table class="conj">${[0,1,2].map(k => `<tr><td>${DE_PRON_SHOW[k]} <b>${esc(it.forms[k])}</b></td><td>${DE_PRON_SHOW[k+3]} <b>${esc(it.forms[k+3])}</b></td></tr>`).join('')}</table>`
+      : `<div class="qhint">Sag alle 6 Formen auf · Tippen zum Umdrehen</div><div class="qtext de">${esc(it.inf)}</div>`}
+  </button>
+  <div class="actions">${C.flipped ? `<button class="cta sec2" data-a="card-no">Nochmal üben</button><button class="cta" data-a="card-yes">Gewusst</button>` : `<button class="cta blue" data-a="flip">Umdrehen</button>`}</div>`;
+}
+function cardAnswer(known){
+  const it = C.deck[C.i], s = st(it.id);
+  if(known){ s.r++; if(s.b < 3) s.b++; R.earned += 3; S.ps += 3; C.known++; engine(); }
+  else { s.w++; C.deck.push(it); }
+  save();
+  C.i++; C.flipped = false;
+  if(C.i >= C.deck.length || C.i >= 20) return finishRound('cards');
+  render(); if(isEn(C.deck[C.i])) say(C.deck[C.i].en);
+}
+
+/* ---------- Befehle ---------- */
+let K = null;
+function startCmd(){
+  let pool = poolItems().filter(i => i.kind === 'action');
+  if(!pool.length) pool = UNITS.flatMap(u => u.items).filter(i => i.kind === 'action');
+  const seq = []; let last = null;
+  for(let n=0;n<8;n++){ let c; do { c = pool[Math.floor(Math.random()*pool.length)]; } while(pool.length > 1 && c === last); seq.push(c); last = c; }
+  K = {seq, i:0, shown:false};
+  R = {start:Date.now(), earned:0, results:null};
+  go({name:'cmd'}); say(seq[0].en, .8);
+}
+function renderCmd(){
+  const it = K.seq[K.i];
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Befehle</h2><div class="pill num">${K.i+1} / ${K.seq.length}</div></div>
+  <section class="panel qcard" style="min-height:320px">
+    <div class="qhint">Hör zu und mach mit!</div>
+    <button class="speak big" data-a="say" data-t="${esc(it.en)}">${IC.spk}Nochmal hören</button>
+    ${K.shown ? `${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext">${esc(it.en)}</div><div class="muted" style="font-size:20px">${esc(it.de)}</div>` : '<p class="note">Steh auf und mach die Bewegung. Dann tippe auf «Zeigen».</p>'}
+  </section>
+  <div class="actions">${K.shown ? `<button class="cta" data-a="cmd-next">${K.i+1 < K.seq.length ? 'Nächster Befehl' : 'Ziel!'}</button>` : `<button class="cta blue" data-a="cmd-show">Zeigen</button>`}</div>`;
+}
+
+/* ---------- Sprechen ---------- */
+let P = null, speakSess = null;
+function startSpeak(){
+  const deck = weightedPick(poolItems().filter(i => isEn(i) && words(i.en).length <= 4), 8);
+  if(!deck.length) return;
+  P = {deck, i:0, heard:'', live:false, result:null};
+  R = {start:Date.now(), earned:0, results:null};
+  speakSess = {
+    partial: t => { if(!P) return; P.heard = t; render(); },
+    final: t => { if(!P) return; P.heard = t; evalSpeech(t); },
+    state: s => { if(!P) return; P.live = s === 'listening'; render(); }
+  };
+  go({name:'speak'});
+}
+function evalSpeech(t){
+  const it = P.deck[P.i];
+  const clean = s => norm(s).toLowerCase().replace(/[^a-z0-9' ]/g,'').replace(/^an? /,'').replace(/^i am /,"i'm ");
+  const ok = clean(t) === clean(it.en) || clean(t).includes(clean(it.en));
+  P.result = ok;
+  if(ok){ R.earned += 10; S.ps += 10; const s = st(it.id); s.r++; if(s.b < 3) s.b++; engine(); save(); try { dictation.stop(); } catch(e){} }
+  render();
+}
+function renderSpeak(){
+  const it = P.deck[P.i];
+  return `<div class="play-top"><button class="icon-btn" data-a="quit" aria-label="Beenden">${IC.x}</button><h2 style="flex:1;text-transform:uppercase">Sprechen</h2><div class="pill num">${P.i+1} / ${P.deck.length}</div><div class="pill num">${IC.ps}${R.earned}</div></div>
+  <section class="panel qcard" style="min-height:340px">
+    <div class="qhint">Sag es auf Englisch</div>
+    ${it.img?`<div class="qimg">${it.img}</div>`:''}<div class="qtext de">${esc(it.de)}</div>
+    <button class="mic ${P.live?'live':''}" data-a="mic" aria-label="Mikrofon">${IC.mic}</button>
+    <div style="min-height:28px;font-size:20px">${P.heard ? 'Gehört: «' + esc(P.heard) + '»' : '<span class="note">Tippe aufs Mikrofon und sprich.</span>'}</div>
+    ${P.result === true ? '<div class="chip ok">Richtig! +10 PS</div>' : P.result === false ? `<div class="chip">Nicht ganz. Richtig ist: <b>${esc(it.en)}</b></div>` : ''}
+  </section>
+  <div class="actions"><button class="speak" data-a="say" data-t="${esc(it.en)}">${IC.spk}Tipp: Anhören</button><button class="cta" data-a="speak-next">${P.i+1 < P.deck.length ? 'Weiter' : 'Ziel!'}</button></div>`;
+}
+
+/* ---------- Eltern ---------- */
+let backupCode = '', backupMsg = '', restoreCand = null, restoreMsg = '';
+let pinBuf = '', pinFirst = null, parentsOpen = false, confirmReset = false, pinMsg = '';
+function renderPin(){
+  const setting = !S.pin || view.changePin;
+  const title = setting ? (pinFirst === null ? 'Neuen PIN festlegen' : 'PIN wiederholen') : 'PIN eingeben';
+  return `${topBar()}
+  <section class="panel" style="display:flex;flex-direction:column;gap:20px;align-items:center;max-width:420px;margin:0 auto;width:100%">
+    <div class="label">Eltern-Bereich</div><h2>${title}</h2>
+    <div class="dots">${[0,1,2,3].map(i => `<i class="${i < pinBuf.length ? 'f' : ''}"></i>`).join('')}</div>
+    ${pinMsg ? `<p class="note" style="color:var(--bad)">${esc(pinMsg)}</p>` : ''}
+    <div class="pinpad">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-a="pin" data-n="${n}">${n}</button>`).join('')}<button data-a="pin-del" aria-label="Löschen">←</button><button data-a="pin" data-n="0">0</button><button data-a="home" aria-label="Abbrechen">${IC.x}</button></div>
+    ${setting ? '<p class="note">4 Ziffern. Damit schützen Sie Statistik und Einstellungen.</p>' : ''}
+  </section>`;
+}
+function pinPress(n){
+  pinMsg = '';
+  if(pinBuf.length >= 4) return;
+  pinBuf += n;
+  if(pinBuf.length === 4){
+    const setting = !S.pin || view.changePin;
+    if(setting){
+      if(pinFirst === null){ pinFirst = pinBuf; pinBuf = ''; }
+      else if(pinFirst === pinBuf){ S.pin = pinBuf; save(); pinFirst = null; pinBuf = ''; parentsOpen = true; return go({name:'parents'}); }
+      else { pinFirst = null; pinBuf = ''; pinMsg = 'Die PINs stimmen nicht überein. Bitte neu festlegen.'; }
+    } else {
+      if(pinBuf === S.pin){ pinBuf = ''; parentsOpen = true; return go({name:'parents'}); }
+      pinBuf = ''; pinMsg = 'Falscher PIN.';
+    }
+  }
+  render();
+}
+function fmtMin(s){ const m = Math.round(s/60); return m < 60 ? m + ' Min.' : Math.floor(m/60) + ' Std. ' + (m%60) + ' Min.'; }
+function renderParents(){
+  const lvl = b => `<span class="lvl">${[1,2,3,4,5].map(i => `<i class="${i<=b?'f':''}"></i>`).join('')}</span>`;
+  const allIt = UNITS.flatMap(u => u.items);
+  const errors = allIt.filter(i => st(i.id).w > 0).sort((a,b) => (st(b.id).w - st(b.id).r*.3) - (st(a.id).w - st(a.id).r*.3)).slice(0,10);
+  const days = Object.keys(S.days).length;
+  const numAcc = S.numbers.r + S.numbers.w ? Math.round(S.numbers.r/(S.numbers.r+S.numbers.w)*100) : null;
+  return `${topBar()}
+  <section class="sec"><h2>Eltern-Bereich</h2><div class="row"><span class="note">Speicherung: ${syncState === 'online' ? 'online, geräteübergreifend' : 'nur dieses Gerät'}</span><button class="cta sec2" data-a="home">Zurück</button></div></section>
+  <section class="panel kpis">
+    <div class="kpi"><span class="label">Runden</span><b class="num">${S.rounds}</b></div>
+    <div class="kpi"><span class="label">Lernzeit</span><b class="num">${fmtMin(S.seconds)}</b></div>
+    <div class="kpi"><span class="label">Lerntage</span><b class="num">${days}</b></div>
+    <div class="kpi"><span class="label">Serie</span><b class="num">${streak()} ${streak() === 1 ? 'Tag' : 'Tage'}</b></div>
+  </section>
+  <section class="cols2">
+    ${UNITS.map(u => `<div class="panel"><div class="label">${u.subject} · ${u.name} · ${esc(u.title)}</div><h3 style="margin:6px 0 10px">Lernziele</h3>
+      <div class="goals">${GOALS[u.id].map(g => { const p = goalProgress(g); return `<div class="goal"><div><small>${g.lvl === 'Profi' ? 'Profi-Anforderung' : 'Grundanforderung'}</small><p>${esc(g.t)}</p></div>${gearsHtml(p, Math.round(p*100)+' %')}</div>`; }).join('')}</div>
+      ${u.numbers ? `<p class="note" style="margin-top:10px">Zahlen: ${S.numbers.r} richtig, ${S.numbers.w} falsch${numAcc!==null?' ('+numAcc+' % Trefferquote)':''}.</p>` : ''}
+    </div>`).join('')}
+  </section>
+  <section class="panel"><div class="label">Fehlerwörter</div><h3 style="margin:6px 0 10px">Hier hakt es am meisten</h3>
+    ${errors.length ? `<div class="tbl-wrap"><table><thead><tr><th>Aufgabe</th><th>Lösung</th><th>Fach</th><th>Falsch</th><th>Richtig</th><th>Stufe</th></tr></thead><tbody>${errors.map(i => { const s = st(i.id); return `<tr><td>${esc(isDe(i) ? deLabel(i) : isNmg(i) ? nmgLabel(i) : isNom(i) ? nomLabel(i) : isMath(i) ? (MFAM[i.fam] || i.q || i.shape || i.fam) : i.en)}</td><td>${esc(isDe(i) ? deSolution(i) : isNmg(i) ? nmgSolution(i) : isNom(i) ? nomSolution(i) : isMath(i) ? (i.a || (i.shape ? 'Form erkennen' : 'wird zufällig erzeugt')) : i.de)}</td><td>${unitById(i.unit).subject} · ${unitById(i.unit).name}</td><td class="num">${s.w}</td><td class="num">${s.r}</td><td>${lvl(s.b)}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="note">Noch keine Fehler erfasst. Sobald Ihr Sohn Runden fährt, erscheinen hier die schwierigsten Wörter.</p>'}
+    <p class="note" style="margin-top:10px">Stufe 0–5: Jede richtige Antwort hebt die Stufe, ein Fehler setzt sie auf 1 zurück. Wörter mit tiefer Stufe kommen häufiger. Ab Stufe 3 tippt er frei statt mit Buchstaben-Kacheln.</p>
+  </section>
+  <section class="panel"><div class="label">Deutsch · Verben und Nomen</div><h3 style="margin:6px 0 10px">Fertigkeiten</h3>
+    <div class="tbl-wrap"><table><thead><tr><th>Bereich</th><th>Richtig</th><th>Falsch</th><th>Trefferquote</th></tr></thead><tbody>${Object.keys(SKILL_NAMES).map(k => { const x = S.skills[k] || {r:0,w:0}, n = x.r + x.w; return `<tr><td>${SKILL_NAMES[k]}</td><td class="num">${x.r}</td><td class="num">${x.w}</td><td class="num">${n ? Math.round(x.r/n*100) + ' %' : '–'}</td></tr>`; }).join('')}</tbody></table></div>
+  </section>
+  ${UNITS.filter(u => u.subject === 'Englisch').map(u => `<section class="panel"><div class="label">Alle Wörter · ${u.subject} ${u.name}</div>
+    <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>Englisch</th><th>Deutsch</th><th>Stufe</th><th>R / F</th></tr></thead><tbody>${u.items.map(i => { const s = st(i.id); return `<tr><td>${esc(i.en)}</td><td>${esc(i.de)}</td><td>${lvl(s.b)}</td><td class="num">${s.r} / ${s.w}</td></tr>`; }).join('')}</tbody></table></div></section>`).join('')}
+  <section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="label">Spielstand sichern</div>
+    <p class="note">Speichert PS, Autos, Lernstand und Statistik. So geht beim Löschen der Browserdaten oder beim Gerätewechsel nichts verloren.</p>
+    <div class="row">
+      ${downloadsNs ? '<button class="cta blue" data-a="backup-file">Als Datei sichern</button>' : ''}
+      <button class="cta sec2" data-a="backup-code">Sicherungscode anzeigen</button>
+    </div>
+    ${backupMsg ? `<p class="note ok-msg">${esc(backupMsg)}</p>` : ''}
+    ${backupCode ? `<textarea id="backupcode" class="codebox" readonly>${esc(backupCode)}</textarea><div class="row"><button class="cta sec2" data-a="copy-code">Code kopieren</button><span class="note">Speichern Sie den Code z.B. in einer Notiz oder senden Sie ihn sich per E-Mail.</span></div>` : ''}
+    <div class="label" style="margin-top:8px">Spielstand wiederherstellen</div>
+    <div class="row">
+      <label class="cta sec2 filebtn">Datei wählen<input id="restorefile" type="file" accept=".json,.txt,application/json,text/plain"></label>
+    </div>
+    <textarea id="restorecode" class="codebox" placeholder="Oder Sicherungscode hier einfügen"></textarea>
+    <div class="row"><button class="cta sec2" data-a="restore-code">Code prüfen</button></div>
+    ${restoreMsg ? `<p class="note err-msg">${esc(restoreMsg)}</p>` : ''}
+    ${restoreCand ? `<div class="row"><span>Sicherung vom ${esc(new Date(restoreCand.savedAt).toLocaleString('de-CH'))} mit <b>${(restoreCand.data.ps||0).toLocaleString('de-CH')} PS</b> laden? Der aktuelle Stand wird ersetzt.</span><button class="cta" data-a="restore-yes">Ja, laden</button><button class="cta sec2" data-a="restore-no">Abbrechen</button></div>` : ''}
+  </section>
+  <section class="panel"><div class="label">Einstellungen</div>
+    <button class="toggle" data-a="sound"><span class="sw ${S.sound?'on':''}"></span><span>Motorensound und Effekte</span></button>
+    <div class="row" style="margin-top:10px"><button class="cta sec2" data-a="change-pin">PIN ändern</button>
+    ${confirmReset ? `<span>Wirklich alles löschen (PS, Autos, Lernstand)?</span><button class="cta" style="background:var(--bad);color:#fff" data-a="reset-yes">Ja, zurücksetzen</button><button class="cta sec2" data-a="reset-no">Abbrechen</button>` : `<button class="cta sec2" data-a="reset">Fortschritt zurücksetzen</button>`}</div>
+  </section>`;
+}
+
+/* ---------------- Sicherung ---------------- */
+function backupPayload(){ return {app:'TurboLearn', v:1, savedAt:Date.now(), data:JSON.parse(JSON.stringify(S))}; }
+function encodeBackup(){ return 'TL1:' + btoa(unescape(encodeURIComponent(JSON.stringify(backupPayload())))); }
+function parseBackup(text){
+  text = String(text||'').trim();
+  try {
+    let obj;
+    if(text.startsWith('TL1:')) obj = JSON.parse(decodeURIComponent(escape(atob(text.slice(4).replace(/\s+/g,'')))));
+    else obj = JSON.parse(text);
+    if(!obj || obj.app !== 'TurboLearn' || !obj.data || typeof obj.data !== 'object') return null;
+    return obj;
+  } catch(e){ return null; }
+}
+function offerRestore(text){
+  const obj = parseBackup(text);
+  restoreCand = obj; restoreMsg = obj ? '' : 'Das ist keine gültige TurboLearn-Sicherung. Prüfen Sie, ob der Code vollständig ist.';
+  render();
+}
+
+/* ---------------- Render und Aktionen ---------------- */
+function render(){
+  const v = view.name;
+  const html = v === 'home' ? renderHome() : v === 'garage' ? renderGarage() : v === 'paint' ? renderPaint() : v === 'quartett' ? renderQuartett() : v === 'qend' ? renderQEnd() : v === 'race' ? renderRace() : v === 'end' ? renderEnd()
+    : v === 'memory' ? renderMemory() : v === 'cards' ? renderCards() : v === 'cmd' ? renderCmd() : v === 'speak' ? renderSpeak() : v === 'writechoose' ? renderWriteChoose() : v === 'paperchoose' ? renderPaperChoose() : v === 'paper' ? renderPaper()
+    : v === 'pin' ? renderPin() : v === 'parents' ? (parentsOpen ? renderParents() : renderPin()) : renderHome();
+  document.getElementById('app').innerHTML = html;
+  const rf = document.getElementById('restorefile');
+  if(rf) rf.addEventListener('change', () => { const f = rf.files && rf.files[0]; if(!f) return; const fr = new FileReader(); fr.onload = () => offerRestore(fr.result); fr.readAsText(f); });
+  const inp = document.getElementById('typein');
+  if(inp){
+    inp.addEventListener('input', () => { R.typed = inp.value; });
+    inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); if(R.fb) nextQ(); else checkTyped(); } });
+  }
+}
+function checkTyped(){
+  const q = R.queue[R.idx];
+  const val = (document.getElementById('typein') || {}).value || '';
+  if(!val.trim()) return;
+  R.typed = val;
+  if(q.math) return answer(val.replace(/[\s'’]/g,'') === String(q.answer));
+  if(q.de) return answer(norm(val) === norm(q.answer));
+  if(q.type === 'num_write'){
+    const v = norm(val).replace(/\s+/g,'-'), t = q.item.en.replace(/\s+/g,'-');
+    return answer(v === t || norm(val) === q.item.en);
+  }
+  answer(acceptForms(q.item.en).includes(norm(val)));
+}
+const A = {
+  home: () => { WRITE_MODE = null; parentsOpen = false; confirmReset = false; pinBuf = ''; pinFirst = null; pinMsg = ''; speakSess = null; if(dictation) try { dictation.stop(); } catch(e){} go({name:'home'}); },
+  garage: () => go({name:'garage'}),
+  fav: el => { S.fav = +el.dataset.i; save(); engine(); render(); },
+  paint: el => go({name:'paint', car:+el.dataset.i}),
+  'paint-set': el => { S.paint = S.paint || {}; const k = +el.dataset.k; if(k) S.paint[view.car] = k; else delete S.paint[view.car]; save(); render(); },
+  'q-start': () => { audio(); startQuartett(); },
+  'q-pick': el => qResolve(el.dataset.k),
+  'q-cpu': () => qResolve(Q.cpuChoice),
+  'q-next': () => qNext(),
+  more: () => { showMore = !showMore; render(); },
+  sound: () => { S.sound = !S.sound; save(); if(S.sound){ audio(); engine(); } render(); },
+  parents: () => { pinBuf = ''; pinFirst = null; pinMsg = ''; go({name: parentsOpen ? 'parents' : 'pin'}); },
+  pin: el => pinPress(el.dataset.n),
+  'pin-del': () => { pinBuf = pinBuf.slice(0,-1); render(); },
+  'change-pin': () => { parentsOpen = false; pinBuf = ''; pinFirst = null; go({name:'pin', changePin:true}); },
+  reset: () => { confirmReset = true; render(); },
+  'backup-file': () => {
+    if(!downloadsNs) return;
+    const d = new Date(), name = 'TurboLearn-Sicherung-' + dayKey(d) + '.json';
+    downloadsNs.save({filename:name, data:JSON.stringify(backupPayload(), null, 1)})
+      .then(() => { backupMsg = 'Sicherung gespeichert: ' + name; render(); })
+      .catch(() => { backupMsg = ''; backupCode = encodeBackup(); render(); });
+  },
+  'backup-code': () => { backupCode = encodeBackup(); backupMsg = ''; render(); },
+  'copy-code': () => {
+    const ta = document.getElementById('backupcode');
+    const fallback = () => { if(ta){ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } backupMsg = 'Code markiert. Tippen Sie jetzt auf «Kopieren».'; render(); setTimeout(() => { const t = document.getElementById('backupcode'); if(t){ t.focus(); t.select(); t.setSelectionRange(0, t.value.length); } }, 50); };
+    try { navigator.clipboard.writeText(backupCode).then(() => { backupMsg = 'Code kopiert.'; render(); }, fallback); } catch(e){ fallback(); }
+  },
+  'restore-code': () => offerRestore((document.getElementById('restorecode')||{}).value),
+  'restore-no': () => { restoreCand = null; render(); },
+  'restore-yes': () => { const keepPin = S.pin; S = Object.assign(blank(), restoreCand.data); if(!S.pin) S.pin = keepPin; restoreCand = null; restoreMsg = ''; backupMsg = 'Spielstand geladen.'; save(); render(); },
+  'reset-no': () => { confirmReset = false; render(); },
+  'reset-yes': () => { const pin = S.pin, snd = S.sound; S = blank(); S.pin = pin; S.sound = snd; confirmReset = false; save(); render(); },
+  unit: el => { const d = DECKS.find(x => x.id === el.dataset.u); if(!d) return; S.units = deckOn(d) ? S.units.filter(x => !d.units.includes(x)) : [...new Set([...S.units, ...d.units])].sort(); save(); render(); },
+  say: el => say(el.dataset.t),
+  'start-race': () => { audio(); startRace(); },
+  'start-memory': () => { audio(); startMemory(); },
+  'start-cards': () => { audio(); startCards(); },
+  'write-choose': () => go({name:'writechoose'}),
+  'paper-choose': () => go({name:'paperchoose'}),
+  'paper-go': el => { audio(); startPaper(el.dataset.d); },
+  'paper-show': () => { PT.shown = true; render(); },
+  'paper-mark': el => { const i = +el.dataset.i; PT.ok.has(i) ? PT.ok.delete(i) : PT.ok.add(i); render(); },
+  'paper-done': () => paperDone(),
+  'write-go': el => { audio(); startWrite(el.dataset.m); },
+  'start-cmd': () => { audio(); startCmd(); },
+  'start-speak': () => { audio(); startSpeak(); },
+  again: el => ({race:startRace, memory:startMemory, cards:startCards, cmd:startCmd, speak:startSpeak, paper:() => startPaper(PT ? PT.dir : 'de'), write:() => startWrite(WRITE_MODE || 'tiles')}[el.dataset.k] || startRace)(),
+  quit: () => A.home(),
+  pick: el => { const q = R.queue[R.idx]; const i = +el.dataset.i; answer(q.opts[i].ok, {pick:i}); },
+  next: () => nextQ(),
+  tile: el => {
+    const q = R.queue[R.idx], i = +el.dataset.i;
+    if(q.tiles[i].used) return;
+    const slotsNeeded = (q.type === 'sentence' || q.type === 'mon_order' || q.type === 'm_order') ? q.tiles.length : [...q.target].filter(c => c !== ' ').length;
+    if(q.filled.length >= slotsNeeded) return;
+    q.tiles[i].used = true; q.filled.push(i); render();
+  },
+  unfill: el => { const q = R.queue[R.idx], k = +el.dataset.k; const ti = q.filled[k]; q.tiles[ti].used = false; q.filled.splice(k,1); render(); },
+  'check-spell': () => {
+    const q = R.queue[R.idx];
+    if(q.type === 'num_write' || q.keyboard) return checkTyped();
+    const need = (q.type === 'sentence' || q.type === 'mon_order' || q.type === 'm_order') ? q.tiles.length : [...q.target].filter(c => c !== ' ').length;
+    if(q.filled.length < need) return;
+    let built;
+    if(q.type === 'sentence' || q.type === 'mon_order' || q.type === 'm_order') built = q.filled.map(f => q.tiles[f].ch).join(' ');
+    else { let k = 0; built = [...q.target].map(ch => ch === ' ' ? ' ' : q.tiles[q.filled[k++]].ch).join(''); }
+    answer(norm(built) === q.target);
+  },
+  tok: el => { const q = R.queue[R.idx]; const t = q.tokens[+el.dataset.k]; t.sel = !t.sel; render(); },
+  'check-find': () => { const q = R.queue[R.idx]; if(!q.tokens.some(t => t.sel)) return; answer(q.tokens.every(t => t.sel === t.verb)); },
+  part: el => { const q = R.queue[R.idx]; if(R.fb) return; const k = +el.dataset.k; answer(k === q.item.idx, {pick:k}); },
+  mem: el => memTap(+el.dataset.i),
+  flip: () => { C.flipped = !C.flipped; render(); },
+  'card-yes': () => cardAnswer(true),
+  'card-no': () => cardAnswer(false),
+  'cmd-show': () => { K.shown = true; render(); },
+  'cmd-next': () => { K.i++; K.shown = false; if(K.i >= K.seq.length) return finishRound('cmd'); render(); say(K.seq[K.i].en, .8); },
+  mic: () => {
+    if(!dictation) return;
+    if(P.live){ dictation.stop().catch(() => {}); return; }
+    P.heard = ''; P.result = null;
+    dictation.start().catch(err => { P.live = false; P.heard = ''; render(); });
+    P.live = true; render();
+  },
+  'speak-next': () => { try { dictation && dictation.stop().catch(() => {}); } catch(e){} P.i++; P.heard = ''; P.result = null; P.live = false; if(P.i >= P.deck.length){ speakSess = null; return finishRound('speak'); } render(); },
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]'); if(!el || el.disabled) return;
+  const fn = A[el.dataset.a]; if(fn) fn(el);
+});
+
+render();
+connect();
+connectDictation();
+connectDownloads();
+})();
+</script>
