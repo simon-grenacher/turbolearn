@@ -194,6 +194,29 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.0
 .pairs{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
 .pp{display:flex;gap:4px}
 .pp b{background:var(--panel-2);border:2px solid var(--line);border-radius:8px;padding:8px 12px;font:700 24px var(--display)}
+.tbook{display:inline-block;background:var(--panel-2);border:2px solid var(--line);border-radius:10px;padding:8px}
+.tbh{font:700 14px var(--display);color:var(--muted);text-align:center;margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+.tbg{display:grid;grid-template-columns:repeat(10,minmax(0,34px));gap:2px}
+.tbg span{min-height:22px;border:1px solid var(--line);border-radius:3px;font:700 13px var(--display);display:flex;align-items:center;justify-content:center;padding:4px 0}
+.tbook .tbh + .tbg span{min-height:0;height:17px;padding:0;font-size:11px}
+.tbg .hole{border:2px solid var(--orange);color:var(--orange);font-size:16px}
+.tbg .me{border-color:var(--blue);color:var(--fg);background:rgba(47,109,255,.25)}
+.mvis svg.setzen{width:100%;max-width:920px}
+.setzen .lp{cursor:pointer}
+.setzen .lp .hit{fill:rgba(255,255,255,.001);stroke:var(--line);stroke-width:1.5}
+.setzen .lp .dot{fill:var(--muted)}
+.setzen .lp:hover .hit{stroke:var(--orange)}
+.setzen .lp.ok .hit{stroke:var(--good);stroke-width:3}.setzen .lp.ok .dot{fill:var(--good)}
+.setzen .lp.no .hit{stroke:var(--bad);stroke-width:3}.setzen .lp.no .dot{fill:var(--bad)}
+.legen{display:flex;flex-direction:column;gap:10px}
+.lprev{min-height:84px;display:flex;align-items:center;justify-content:center}
+.lprev .hze{max-height:110px}
+.lrow{display:grid;grid-template-columns:minmax(0,180px) 56px 52px 56px;justify-content:center;align-items:center;gap:8px}
+.lrow span{font-weight:600}
+.lrow b{font:700 28px var(--display);text-align:center}
+.lbtn{height:52px;border-radius:var(--r-md);border:2px solid var(--line);background:var(--panel-2);color:var(--fg);font:700 28px var(--display);cursor:pointer}
+.lbtn:disabled{opacity:.35}
+.lbtn:active{background:var(--blue)}
 .tafel{display:grid;grid-template-columns:repeat(3,76px);gap:4px}
 .tafel span{border:2px solid var(--line);border-radius:6px;padding:10px 0;text-align:center;font:700 22px var(--display);background:var(--panel-2)}
 .numline{width:100%;max-width:640px}
@@ -1094,6 +1117,30 @@ function lineSvg(start, val){
   const ax = pad + (val - start)*step;
   return `<svg class="numline" viewBox="0 0 ${W} 110" role="img" aria-label="Zahlenstrahl"><line x1="${pad-10}" y1="40" x2="${W-pad+10}" y2="40" stroke="var(--fg)" stroke-width="2"/>${t}<path d="M${ax} 72 l-9 16 h18 z" fill="var(--orange)"/><path d="M${ax} 70 V46" stroke="var(--orange)" stroke-width="3"/></svg>`;
 }
+function buchPage(k, mark){ let c = ''; for(let i=0;i<100;i++) c += `<span class="${i === mark ? 'hole' : ''}">${i === mark ? '?' : i === 0 && mark !== 0 ? (k-1)*100+1 : ''}</span>`; return `<div class="tbook"><div class="tbh">Seite ${k}</div><div class="tbg">${c}</div></div>`; }
+function buchRows(n, t){ const rs = Math.min(n, t) - ((Math.min(n, t)-1)%10), rows = Math.abs(t-n) === 10 ? 2 : 1; let c = ''; for(let i=0;i<rows*10;i++){ const x = rs + i; c += `<span class="${x === t ? 'hole' : x === n ? 'me' : ''}">${x === t ? '?' : x === n ? n : ''}</span>`; } return `<div class="tbook"><div class="tbg">${c}</div></div>`; }
+function setzenSvg(q){
+  const W = 600, pad = 30, m = q.count - 1, dx = (W - 2*pad) / m, r = Math.min(15, dx/2 - 1);
+  let t = '';
+  for(let i=0;i<=m;i++){
+    const x = pad + i*dx, lab = i === 0 || i === m || i*2 === m, mid = !lab && q.step === 50 && i % 2 === 0;
+    t += `<line x1="${x}" y1="52" x2="${x}" y2="${52 - (lab ? 24 : mid ? 18 : 11)}" stroke="var(--muted)" stroke-width="${lab ? 2 : 1}"/>`;
+    if(lab) t += `<text x="${x}" y="78" text-anchor="middle" fill="var(--fg)" font-size="16" font-family="Lexend,sans-serif">${q.lo + i*q.step}</text>`;
+  }
+  let dots = '';
+  for(let i=0;i<=m;i++){
+    const x = pad + i*dx; let cls = 'lp';
+    if(R.fb){ if(i === q.tk) cls += ' ok'; else if(R.fb.pick === i) cls += ' no'; }
+    dots += `<g class="${cls}" ${R.fb ? '' : `data-a="lpick" data-k="${i}" role="button"`}><circle class="hit" cx="${x}" cy="52" r="${r}"/><circle class="dot" cx="${x}" cy="52" r="5"/></g>`;
+    if(R.fb && i === q.tk) dots += `<text x="${x}" y="22" text-anchor="middle" fill="var(--good)" font-size="17" font-weight="700" font-family="Lexend,sans-serif">${q.target}</text>`;
+  }
+  return `<svg class="numline setzen" viewBox="0 0 ${W} 92" role="img" aria-label="Zahlenstrahl zum Antippen"><line x1="${pad-10}" y1="52" x2="${W-pad+10}" y2="52" stroke="var(--fg)" stroke-width="2"/>${t}${dots}</svg>`;
+}
+function legenHtml(q){
+  const row = (t, name, col, k) => `<div class="lrow"><span style="color:${col}">${name}</span><button class="lbtn" data-a="blk" data-t="${t}" data-d="-1" ${R.fb || !k ? 'disabled' : ''} aria-label="${name} weniger">−</button><b class="num">${k}</b><button class="lbtn" data-a="blk" data-t="${t}" data-d="1" ${R.fb || k >= 9 ? 'disabled' : ''} aria-label="${name} mehr">+</button></div>`;
+  const v = q.h*100 + q.z*10 + q.e;
+  return `<div class="panel qcard legen" style="min-height:0"><div class="lprev">${v ? hzeSvg(v) : '<span class="muted">Tippe auf +, um Plättchen zu legen</span>'}</div>${row('h','Hunderterplatten','var(--fg)',q.h)}${row('z','Zehnerstangen','var(--blue)',q.z)}${row('e','Einerwürfel','var(--orange)',q.e)}</div>` + (R.fb ? '' : `<div class="actions"><button class="cta" data-a="check-legen" ${v ? '' : 'disabled'}>Prüfen</button></div>`);
+}
 function mauerHtml(c, h){ const cell = k => `<span class="mz ${k===h?'hole':''}">${k===h?'?':c[k]}</span>`; return `<div class="mauer"><div>${cell('t')}</div><div>${cell('l')}${cell('r')}</div><div>${cell('a')}${cell('b')}${cell('c')}</div></div>`; }
 function lineSvg1000(val){ const W=600,pad=30,step=(W-2*pad)/1000; let t=''; for(let k=0;k<=1000;k+=50){ const x=pad+k*step, len=k%500===0?22:k%100===0?15:8; t+=`<line x1="${x}" y1="40" x2="${x}" y2="${40-len}" stroke="var(--muted)" stroke-width="${k%100===0?2:1}"/>`; if(k%500===0) t+=`<text x="${x}" y="64" text-anchor="middle" fill="var(--fg)" font-size="16" font-family="Lexend,sans-serif">${k}</text>`; } const ax=pad+val*step; return `<svg class="numline" viewBox="0 0 ${W} 110" role="img" aria-label="Rechenstrich"><line x1="${pad-10}" y1="40" x2="${W-pad+10}" y2="40" stroke="var(--fg)" stroke-width="2"/>${t}<path d="M${ax} 72 l-9 16 h18 z" fill="var(--orange)"/><path d="M${ax} 70 V46" stroke="var(--orange)" stroke-width="3"/></svg>`; }
 const MFAM = {
@@ -1102,13 +1149,29 @@ const MFAM = {
   nearest:'Welche Zahl ist am nächsten?', numline:'Zahlenstrahl', neighbors:'Nachbarzahlen', nachbarzehner:'Nachbarzehner', nachbarhunderter:'Nachbarhunderter',
   middle:'Zahl in der Mitte', sequence:'Zahlenfolgen', erg_zehner:'Ergänzen auf den Zehner', erg_hunderter:'Ergänzen auf den Hunderter', diff:'Unterschied',
   doublehalf:'Verdoppeln und Halbieren', money:'Geld bis 1000 Franken', plus:'Rechnen mit Hundertern',
-  pakete:'Wie viele sind es? (Packungen)', erg_1000:'Ergänzen auf 1000', mauer:'Zahlenmauern', cmp_sign:'Zeichen <, >, = einsetzen', seq_left:'Zahlenfolge nach links', kette:'Rechenkette (Stellenwerttafel)', regel:'Regel finden', odd_one:'Welche Zahl passt nicht?', pair_rule:'Warum passen die Paare?', prop:'Zahlen untersuchen', tafel:'Zahlentafel', between:'Zahlen dazwischen', rechenstrich:'Rechenstrich 0–1000'
+  pakete:'Wie viele sind es? (Packungen)', erg_1000:'Ergänzen auf 1000', mauer:'Zahlenmauern', cmp_sign:'Zeichen <, >, = einsetzen', seq_left:'Zahlenfolge nach links', kette:'Rechenkette (Stellenwerttafel)', regel:'Regel finden', odd_one:'Welche Zahl passt nicht?', pair_rule:'Warum passen die Paare?', prop:'Zahlen untersuchen', tafel:'Zahlentafel', between:'Zahlen dazwischen', rechenstrich:'Rechenstrich 0–1000', buch:'Tausenderbuch', setzen:'Zahlenstrahl: Zahl setzen', legen:'Zahl legen (Plättchen)'
 };
 function buildMathUnit(){
   const items = Object.keys(MFAM).map(f => ({id:'m1-'+f, unit:'m1', kind:'mq', fam:f, group:f}));
   return {id:'m1', subject:'Mathematik', name:'Zahlenraum', title:'Zahlen bis 1000', items};
 }
-const isMath = i => i && (i.unit === 'm1' || i.unit === 'm2');
+/* Lernkontrolle 1. Dezember 2026: 7 Lernziele vom Blatt */
+const EXAM_DATE = new Date(2026, 11, 1);
+const EXAM_GOALS = [
+  ['z1', 'Ich kenne Zahlen und Ziffern bis 1000, schreibe, ordne und vergleiche sie.', ['zahlwort','zahlwort_rev','order','compare','cmp_sign','between']],
+  ['z2', 'Ich kenne das Tausenderbuch.', ['buch','tafel']],
+  ['z3', 'Ich zerlege Zahlen in Hunderter, Zehner und Einer.', ['hze_build','hze_riddle','buendeln']],
+  ['z4', 'Ich kenne Hunderterplatten, Zehnerstangen und Einerwürfel.', ['hze_read','legen']],
+  ['z5', 'Ich kenne den Stellenwert jeder Ziffer.', ['stellenwert','kette']],
+  ['z6', 'Ich finde mich am Zahlenstrahl zurecht und kenne die Nachbarzahlen.', ['numline','rechenstrich','setzen','neighbors','nachbarzehner','nachbarhunderter']],
+  ['z7', 'Ich ordne und untersuche Zahlen.', ['odd_one','pair_rule','prop','nearest']],
+];
+function buildExamUnit(){
+  const items = EXAM_GOALS.flatMap(g => g[2].map(f => ({id:'mx-'+f, unit:'mx', kind:'mq', fam:f, group:g[0], w:6/g[2].length})));
+  return {id:'mx', subject:'Mathematik', name:'Lernkontrolle', title:'Prüfung 1. Dezember', items};
+}
+function examDays(){ const t = new Date(); t.setHours(0,0,0,0); return Math.round((EXAM_DATE - t) / 864e5); }
+const isMath = i => i && (i.unit === 'm1' || i.unit === 'm2' || i.unit === 'mx');
 function buildMathQ(item, forceType){
   if(item.unit === 'm2') return buildGeoQ(item);
   const b = st(item.id).b, q = {item, retry:false, de:true, math:true, type:'m_'+item.fam};
@@ -1125,6 +1188,27 @@ function buildMathQ(item, forceType){
     case 'odd_one': { const rules = [['alle anderen sind Zehnerzahlen (0 Einer)', x => x%10 === 0, () => rnd(10,99)*10], ['alle anderen haben 3 Hunderter', x => Math.floor(x/100) === 3, () => 300+rnd(1,99)], ['alle anderen sind Schnapszahlen (3 gleiche Ziffern)', x => x%111 === 0, () => rnd(1,9)*111], ['alle anderen haben 0 Zehner', x => x >= 100 && Math.floor(x/10)%10 === 0, () => rnd(1,9)*100+rnd(1,9)], ['alle anderen sind Hunderterzahlen', x => x%100 === 0, () => rnd(1,9)*100], ['alle anderen haben 5 Einer', x => x%10 === 5, () => rnd(10,99)*10+5]]; const ru = pick(rules), set = new Set(); while(set.size < 4) set.add(ru[2]()); let odd; do { odd = rnd(100,999); } while(ru[1](odd)); q.prompt = 'Welche Zahl passt nicht dazu?'; q.opts = shuffle([...set, odd]).map(x => ({t:String(x), ok:x === odd})); q.sol = `${odd} passt nicht: ${ru[0]}.`; break; }
     case 'pair_rule': { const rules = [['Nachbarzahlen', () => { const a = rnd(100,998); return [a, a+1]; }], ['zusammen 1000', () => { const a = rnd(1,19)*50; return [a, 1000-a]; }], ['Unterschied 10', () => { const a = rnd(100,980); return [a, a+10]; }], ['Unterschied 100', () => { const a = rnd(100,899); return [a, a+100]; }], ['das Doppelte', () => { const a = pick([rnd(2,49)*10, rnd(11,49)]); return [a, a*2]; }], ['Ziffern vertauscht', () => { let a; do { a = rnd(101,989); } while(a%10 === 0 || String(a)[0] === String(a)[2]); return [a, +String(a).split('').reverse().join('')]; }], ['das Dreifache', () => { const a = rnd(1,30)*10; return [a, a*3]; }]]; const ru = pick(rules), pairs = [ru[1](), ru[1](), ru[1]()]; q.prompt = 'Warum passen die Paare zusammen?'; q.visual = `<div class="pairs">${pairs.map(pp => `<span class="pp"><b>${pp[0]}</b><b>${pp[1]}</b></span>`).join('')}</div>`; q.opts = optsFrom(ru[0], rules.map(x => x[0]).filter(x => x !== ru[0]), 4); q.sol = 'Die Regel: ' + ru[0]; break; }
     case 'prop': { const props = [['3 Zehner', x => x >= 10 && Math.floor(x/10)%10 === 3], ['8 Einer', x => x%10 === 8], ['6 Hunderter', x => Math.floor(x/100) === 6], ['0 Zehner', x => x >= 100 && x < 1000 && Math.floor(x/10)%10 === 0], ['2 gleiche Ziffern', x => { const t = String(x); return t.length === 3 && new Set(t).size === 2; }], ['aufeinanderfolgende Ziffern', x => { const d = String(x).split('').map(Number); return d.length === 3 && d[1]-d[0] === 1 && d[2]-d[1] === 1; }], ['vier Stellen', x => x >= 1000], ['zwei Stellen', x => x >= 10 && x < 100]]; const pr = pick(props); let right, g = 0; do { right = pick([rnd(10,99), rnd(100,999), rnd(1000,1200), rnd(1,7)*111+12, rnd(1,9)*100+rnd(1,9), 600+rnd(0,99), rnd(1,99)*10+8, rnd(1,9)*100+30+rnd(0,9)]); } while(!pr[1](right) && g++ < 3000); if(!pr[1](right)) return buildMathQ(item); const wrong = new Set(); g = 0; while(wrong.size < 3 && g++ < 3000){ const w = pick([rnd(10,99), rnd(100,999), rnd(1000,1100)]); if(!pr[1](w)) wrong.add(w); } q.prompt = 'Welche Zahl hat ' + pr[0] + '?'; q.opts = shuffle([right, ...wrong]).map(x => ({t:String(x), ok:x === right})); q.sol = `${right} hat ${pr[0]}.`; break; }
+    case 'buch': {
+      const v = pick(['seite','seite','start','ende','obenrechts','unter','ueber','links','rechts','unter','ueber']);
+      if(v === 'seite'){ n = pick([rnd(1,1000), rnd(1,9)*100, rnd(1,9)*100+1, rnd(1,9)*100+rnd(90,99)]); const p = Math.ceil(n/100); q.prompt = 'Im Tausenderbuch hat jede Seite 100 Zahlen. Auf welcher Seite steht die Zahl?'; q.mid = String(n); q.opts = optsFrom('Seite ' + p, [p-1,p+1,p-2,p+2,p+3,p-3].filter(k => k >= 1 && k <= 10).map(k => 'Seite ' + k), 4); q.sol = `${n} steht auf Seite ${p} (Seite ${p}: ${(p-1)*100+1} bis ${p*100}).`; break; }
+      if(v === 'start' || v === 'ende' || v === 'obenrechts'){ const k = rnd(v === 'start' ? 2 : 1, 10); n = v === 'start' ? (k-1)*100+1 : v === 'ende' ? k*100 : (k-1)*100+10; q.prompt = v === 'start' ? `Mit welcher Zahl beginnt Seite ${k} im Tausenderbuch?` : v === 'ende' ? `Welche Zahl steht unten rechts auf Seite ${k}?` : `Welche Zahl steht oben rechts auf Seite ${k}?`; q.visual = buchPage(k, v === 'start' ? 0 : v === 'ende' ? 99 : 9); typed(n); if(!q.keyboard) q.opts = numOpts(n, [n+1, n-1, n+100, n-100, n+10, n-10, n-9, n+9].filter(x => x >= 1 && x <= 1000)); q.sol = `Seite ${k} geht von ${(k-1)*100+1} bis ${k*100}. Gesucht: ${n}.`; break; }
+      let d; do { n = rnd(1, 1000); const r = (n-1)%100, c = (n-1)%10; d = v === 'unter' ? (r < 90 ? 10 : 0) : v === 'ueber' ? (r >= 10 ? -10 : 0) : v === 'links' ? (c !== 0 ? -1 : 0) : (c !== 9 ? 1 : 0); } while(!d);
+      const t = n + d, word = {unter:'direkt unter', ueber:'direkt über', links:'direkt links von', rechts:'direkt rechts von'}[v];
+      q.prompt = `Im Tausenderbuch: Welche Zahl steht ${word} ${n}?`; if(b < 2) q.visual = buchRows(n, t); typed(t); if(!q.keyboard) q.opts = numOpts(t, [n+10, n-10, n+1, n-1, t+1, t-1, n+100].filter(x => x !== t && x >= 1 && x <= 1000)); q.sol = `${word.charAt(0).toUpperCase() + word.slice(1)} ${n} steht ${t} (${d > 0 ? '+' : '−'} ${Math.abs(d)}).`; break;
+    }
+    case 'setzen': {
+      const v = pick(['50','50','10','10','1']);
+      if(v === '50'){ q.lo = 0; q.step = 50; q.count = 21; q.tk = pick([1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19]); }
+      else if(v === '10'){ q.lo = rnd(0,9)*100; q.step = 10; q.count = 11; q.tk = pick([1,2,3,4,6,7,8,9]); }
+      else { q.lo = rnd(1,98)*10; q.step = 1; q.count = 11; q.tk = pick([1,2,3,4,6,7,8,9]); }
+      n = q.lo + q.tk*q.step; q.target = n; q.prompt = 'Tippe auf dem Zahlenstrahl an die richtige Stelle'; q.mid = String(n);
+      q.sol = `${n} liegt zwischen ${n-q.step} und ${n+q.step}.`; break;
+    }
+    case 'legen': {
+      n = pick([rnd(101,999), rnd(101,999), rnd(1,9)*100 + rnd(1,9), rnd(1,9)*100 + rnd(1,9)*10]); q.n = n; q.h = 0; q.z = 0; q.e = 0;
+      q.prompt = 'Lege die Zahl mit Hunderterplatten, Zehnerstangen und Einerwürfeln'; q.mid = (b >= 3 && Math.random() < .5) ? numWordDe(n) : String(n);
+      q.sol = `${n} = ${Math.floor(n/100)} Hunderterplatten, ${Math.floor(n/10)%10} Zehnerstangen, ${n%10} Einerwürfel`; break;
+    }
     case 'tafel': { do { n = rnd(111,988); } while(n%10 === 0 || n%10 === 1); const cells = []; for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++) cells.push(n+dy*10+dx); q.prompt = 'Welche Zahl fehlt in der Zahlentafel?'; q.visual = `<div class="tafel">${cells.map(c => `<span class="${c === n ? 'hole' : ''}">${c === n ? '?' : c}</span>`).join('')}</div>`; typed(n); if(!q.keyboard) q.opts = numOpts(n, [n+1, n-1, n+10, n-10, n+100]); q.sol = `Es fehlt ${n}: links ${n-1}, rechts ${n+1}, oben ${n-10}, unten ${n+10}.`; break; }
     case 'between': { const lo = rnd(1,8)*100 + pick([0,10,33,50]), hi = lo + pick([50,100,111,90]), right = rnd(lo+1, hi-1), wrong = new Set(); while(wrong.size < 3){ const w = pick([rnd(lo-120, lo), rnd(hi, hi+120), lo-1, hi+1]); if(w > 0 && w !== right && (w <= lo || w >= hi)) wrong.add(w); } q.prompt = 'Welche Zahl liegt dazwischen?'; q.mid = `grösser als ${lo}, kleiner als ${hi}`; q.opts = shuffle([right, ...wrong]).map(x => ({t:String(x), ok:x === right})); q.sol = `${lo} < ${right} < ${hi}`; break; }
     case 'rechenstrich': { const v = rnd(1,19)*50; q.prompt = 'Welche Zahl zeigt der Pfeil?'; q.visual = lineSvg1000(v); typed(v); if(!q.keyboard) q.opts = numOpts(v, [v+50, v-50, v+100, v-100].filter(x => x >= 0 && x <= 1000)); q.sol = `Der Pfeil zeigt auf ${v}.`; break; }
@@ -1289,7 +1373,9 @@ function renderMathQ(q, opts){
     else prompt += `<div class="qtext de">${esc(q.big)}</div>`;
   }
   if(q.mid) prompt += `<div class="qtext de" style="font-size:clamp(${q.mid.length > 60 ? '19px,3vw,26px' : '24px,4vw,38px'})">${esc(q.mid).replace('___', '<span class="blank">___</span>')}</div>`;
-  if(q.type === 'm_order'){
+  if(q.type === 'm_setzen'){ prompt += `<div class="mvis">${setzenSvg(q)}</div>`; }
+  else if(q.type === 'm_legen'){ body = legenHtml(q); }
+  else if(q.type === 'm_order'){
     body = `<div class="panel qcard" style="min-height:0"><div class="sentence">${q.filled.map((f,k) => `<button class="tile word" data-a="unfill" data-k="${k}" ${R.fb?'disabled':''}>${esc(q.tiles[f].ch)}</button>`).join('<span class="lt">&lt;</span>')}</div>
       <div class="tiles">${q.tiles.map((t,i) => `<button class="tile word ${t.used?'used':''}" data-a="tile" data-i="${i}" ${R.fb?'disabled':''}>${esc(t.ch)}</button>`).join('')}</div></div>`;
     if(!R.fb) body += `<div class="actions"><button class="cta" data-a="check-spell" ${q.filled.length === q.tiles.length ? '' : 'disabled'}>Prüfen</button></div>`;
@@ -1302,6 +1388,7 @@ function renderMathQ(q, opts){
 }
 
 UNITS.push(buildMathUnit());
+UNITS.push(buildExamUnit());
 UNITS.push(buildGeoUnit());
 const isEn = i => !!(i && (i.unit === 'u2' || i.unit === 'u3'));
 const ITEMS = {}; UNITS.forEach(u => u.items.forEach(i => ITEMS[i.id] = i));
@@ -1361,17 +1448,18 @@ GOALS.d2 = [
   {lvl:'Profi', t:'Ich finde zu einem Verb das passende Nomen (rechnen → die Rechnung).', skills:['n_v2n'], need:10},
 ];
 GOALS.m1 = [
-  {lvl:'Grund', t:'Ich stelle Zahlen bis 1000 mit Hundertern, Zehnern und Einern dar.', ids:() => byGroup('m1','hze_read','hze_build','hze_riddle','buendeln','pakete'), need:3},
+  {lvl:'Grund', t:'Ich stelle Zahlen bis 1000 mit Hundertern, Zehnern und Einern dar.', ids:() => byGroup('m1','hze_read','hze_build','hze_riddle','buendeln','pakete','legen'), need:3},
   {lvl:'Grund', t:'Ich kenne den Stellenwert jeder Ziffer (H, Z, E).', ids:() => byGroup('m1','stellenwert'), need:3},
   {lvl:'Grund', t:'Ich lese und schreibe Zahlwörter (vier-hundert-acht-und-siebzig).', ids:() => byGroup('m1','zahlwort','zahlwort_rev'), need:3},
-  {lvl:'Grund', t:'Ich vergleiche und ordne Zahlen bis 1000.', ids:() => byGroup('m1','compare','order','nearest','cmp_sign','between','tafel'), need:3},
-  {lvl:'Grund', t:'Ich finde mich am Zahlenstrahl zurecht (Nachbarzahlen, Nachbarzehner, Mitte).', ids:() => byGroup('m1','numline','neighbors','nachbarzehner','nachbarhunderter','middle','rechenstrich'), need:3},
+  {lvl:'Grund', t:'Ich vergleiche und ordne Zahlen bis 1000.', ids:() => byGroup('m1','compare','order','nearest','cmp_sign','between','tafel','buch'), need:3},
+  {lvl:'Grund', t:'Ich finde mich am Zahlenstrahl zurecht (Nachbarzahlen, Nachbarzehner, Mitte).', ids:() => byGroup('m1','numline','neighbors','nachbarzehner','nachbarhunderter','middle','rechenstrich','setzen'), need:3},
   {lvl:'Grund', t:'Ich zähle in Schritten und setze Zahlenfolgen fort.', ids:() => byGroup('m1','sequence','seq_left','kette','regel'), need:4},
   {lvl:'Profi', t:'Ich ergänze auf den nächsten Zehner und Hunderter.', ids:() => byGroup('m1','erg_zehner','erg_hunderter'), need:4},
   {lvl:'Profi', t:'Ich verdopple, halbiere, rechne mit Geld und berechne Unterschiede.', ids:() => byGroup('m1','doublehalf','money','diff','plus'), need:4},
   {lvl:'Grund', t:'Ich ergänze auf 1000 und löse Zahlenmauern.', ids:() => byGroup('m1','erg_1000','mauer'), need:3},
   {lvl:'Profi', t:'Ich untersuche Zahlen: Eigenschaften, Regeln, welche Zahl nicht passt.', ids:() => byGroup('m1','odd_one','pair_rule','prop'), need:4},
 ];
+GOALS.mx = EXAM_GOALS.map(g => ({lvl:'Grund', t:g[1], ids:() => byGroup('mx', g[0]), need:3}));
 GOALS.m2 = [
   {lvl:'Grund', t:'Ich erkenne Flächen: Quadrat, Rechteck, Kreis, Dreieck.', ids:() => byGroup('m2','flaeche'), need:2},
   {lvl:'Grund', t:'Ich erkenne Körper: Würfel, Quader, Kugel, Zylinder, Kegel, Pyramide.', ids:() => byGroup('m2','koerper'), need:2},
@@ -1387,6 +1475,7 @@ const DECKS = [
   {id:'n1', subject:'NMG', label:'Tiere', title:'Delfinarten', units:['n1']},
   {id:'m1', subject:'Mathematik', label:'Zahlenraum', title:'Zahlen bis 1000', units:['m1']},
   {id:'m2', subject:'Mathematik', label:'Geometrie', title:'Raum & Lage', units:['m2']},
+  {id:'mx', subject:'Mathematik', get label(){ const d = examDays(); return d > 1 ? '1. Dez. · noch ' + d + ' Tage' : d === 1 ? '1. Dez. · morgen!' : d === 0 ? '1. Dez. · heute!' : 'Prüfung vom 1. Dez.'; }, title:'Lernkontrolle', units:['mx'], exam:true},
 ];
 const SUBJ = {
   Englisch: {c:'#5b95ff', bg:'rgba(91,149,255,.16)', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M9 9v4M9 9h0M13 13v-4l3 4v-4" stroke-linecap="round"/></svg>'},
@@ -1556,7 +1645,7 @@ function acceptForms(en){
 function weightedPick(pool, n){
   const out = []; let p = pool.slice();
   while(out.length < n && p.length){
-    const ws = p.map(i => { const s = st(i.id); return Math.pow(6 - s.b, 2) + (s.w > s.r ? 4 : 0) + (s.b === 0 ? 3 : 0); });
+    const ws = p.map(i => { const s = st(i.id); return (Math.pow(6 - s.b, 2) + (s.w > s.r ? 4 : 0) + (s.b === 0 ? 3 : 0)) * (i.w || 1); });
     let r = Math.random() * ws.reduce((a,b)=>a+b,0), k = 0;
     while(r > ws[k]) { r -= ws[k]; k++; }
     out.push(p[k]); p.splice(k,1);
@@ -2621,6 +2710,9 @@ const A = {
   },
   tok: el => { const q = R.queue[R.idx]; const t = q.tokens[+el.dataset.k]; t.sel = !t.sel; render(); },
   'check-find': () => { const q = R.queue[R.idx]; if(!q.tokens.some(t => t.sel)) return; answer(q.tokens.every(t => t.sel === t.verb)); },
+  lpick: el => { const q = R.queue[R.idx]; if(R.fb || !q) return; const k = +el.getAttribute('data-k'); answer(k === q.tk, {pick:k}); },
+  blk: el => { const q = R.queue[R.idx]; if(R.fb || !q) return; const t = el.getAttribute('data-t'), d = +el.getAttribute('data-d'); q[t] = Math.max(0, Math.min(9, q[t] + d)); render(); },
+  'check-legen': () => { const q = R.queue[R.idx]; if(R.fb || !q) return; answer(q.h*100 + q.z*10 + q.e === q.n); },
   part: el => { const q = R.queue[R.idx]; if(R.fb) return; const k = +el.dataset.k; answer(k === q.item.idx, {pick:k}); },
   kb: el => {
     const inp = document.getElementById('typein'); if(!inp || R.fb) return;
