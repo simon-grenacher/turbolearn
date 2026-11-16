@@ -226,6 +226,12 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.0
 .lbtn{height:52px;border-radius:var(--r-md);border:2px solid var(--line);background:var(--panel-2);color:var(--fg);font:700 28px var(--display);cursor:pointer}
 .lbtn:disabled{opacity:.35}
 .lbtn:active{background:var(--blue)}
+.lorder{display:flex;flex-direction:column;gap:10px}
+.lorder .lo{display:flex;align-items:center;gap:14px;text-align:left;justify-content:flex-start}
+.lnum{flex:0 0 34px;height:34px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font:700 18px var(--display)}
+.lo.sel .lnum{background:var(--orange);border-color:var(--orange);color:#000}
+.lo.ok .lnum{background:var(--good);border-color:var(--good);color:#000}
+.lo.no .lnum{background:var(--bad);border-color:var(--bad);color:#000}
 .tafel{display:grid;grid-template-columns:repeat(3,76px);gap:4px}
 .tafel span{border:2px solid var(--line);border-radius:6px;padding:10px 0;text-align:center;font:700 22px var(--display);background:var(--panel-2)}
 .numline{width:100%;max-width:640px}
@@ -660,6 +666,7 @@ function buildDeQ(item, forceType){
 }
 function renderDeQ(q, opts){
   if(q.nmg) return renderNmgQ(q, opts);
+  if(q.les) return renderLesQ(q, opts);
   if(q.math) return renderMathQ(q, opts);
   if(q.nom && q.type !== 'de_find') return renderNomQ(q, opts);
   const it = q.item; let prompt = '', body = '';
@@ -901,6 +908,198 @@ function renderNmgQ(q, opts){
   return {prompt, body};
 }
 
+/* ---------------- Deutsch: Leseverständnis «Wer rettet den kleinen Delfin?» ---------------- */
+const LES_CH = ['Personen','Ferien mitten im Meer','Ein spannender Ausflug','Kleiner Delfin in Gefahr','Der Kapitän taucht','Hilfe in Sicht?','Zwischen Hoffnung und Sorge','Abschied'];
+/* [Frage, richtig, [falsch], Kapitel, Tag] */
+const LES_MC = [
+  ['Wer ist Isidoro?','der Kapitän der Santa Maria',['der Tierarzt','der Schiffsjunge','der Nachbar von Tante Birgit'],0],
+  ['Wer ist Birgit?','die Tante von Hanna und Leon',['die Mutter von Hanna','die Lehrerin','die Tierärztin'],0],
+  ['Wie heissen die beiden Kinder?','Hanna und Leon',['Anna und Luca','Lena und Tim','Mia und Noah'],0],
+  ['Wer springt ins Meer, um den kleinen Delfin zu retten?','Kapitän Isidoro',['Leon','Tante Birgit','der Schiffsjunge'],0],
+  ['Wer bringt einen Eimer voll Meerwasser?','der Schiffsjunge',['der Tierarzt','Leon','Tante Birgit'],0],
+  ['Wer untersucht den kleinen Delfin?','der Tierarzt',['der Kapitän','Hanna','der Schiffsjunge'],0],
+  ['Wer lässt den kleinen Delfin am Schluss ins Wasser gleiten?','Tante Birgit',['Hanna','der Tierarzt','Leon'],0],
+  ['Wo verbringen Hanna und Leon ihre Ferien?','bei Tante Birgit auf einer Insel',['bei der Oma in den Bergen','in einem Hotel am See','auf einem Bauernhof'],1],
+  ['Was finden Hanna und Leon am allerbesten?','dass es in diesem Meer echte Delfine gibt',['dass sie lange schlafen dürfen','dass es jeden Tag Glace gibt','dass sie Velo fahren dürfen'],1],
+  ['Woher kennen die Kinder Delfine bis jetzt?','aus Büchern und Filmen',['aus dem Zoo','vom Fischmarkt','aus dem Schwimmbad'],1],
+  ['Wo wohnt Tante Birgit?','in einem Haus zwischen Feigenbäumen und Palmen',['auf einem Schiff im Hafen','in einer Hütte im Wald','in einer Wohnung in der Stadt'],1],
+  ['Wer sind für Tante Birgit Nachbarn und Freunde?','die Delfine',['die Fischer','die Möwen','die Schildkröten'],1],
+  ['Wie viele Tage warten die Kinder schon vergeblich auf Delfine?','drei Tage',['einen Tag','sieben Tage','zehn Tage'],1],
+  ['Was sehen die Kinder vom grossen Felsen aus?','Schwärme von winzigen Fischen',['einen Hai','ein Piratenschiff','viele Delfine'],1],
+  ['Wie wollen sie weiter hinaus zu den Delfinen?','mit einem Schiff',['schwimmend','mit einem Flugzeug','mit einem Floss'],1],
+  ['Wie heisst das Schiff?','Santa Maria',['Santa Lucia','Bella Marina','Delfina'],1],
+  ['Warum ist Kapitän Isidoro der richtige Mann für den Ausflug?','Er kennt sich mit Delfinen aus.',['Er hat das schnellste Schiff.','Er ist Tierarzt.','Er wohnt neben Tante Birgit.'],1,'warum'],
+  ['Womit fahren sie zum Hafen?','mit Tante Birgits altem Auto',['mit dem Bus','mit dem Velo','zu Fuss'],2],
+  ['An welchem Tag machen sie den Ausflug?','am Sonntag',['am Montag','am Mittwoch','am Samstag'],2],
+  ['Was für ein Schiff ist die Santa Maria?','ein zierlicher Dampfer',['ein riesiges Kreuzfahrtschiff','ein Segelboot','ein Fischerboot'],2],
+  ['Wo stehen Hanna und Leon auf dem Schiff?','vorne an der Reling',['in der Steuerkabine','ganz hinten','unten im Schiff'],2],
+  ['Warum stellen sich die Kinder vorne an die Reling?','Dort hat man den besten Blick.',['Dort ist es windstill.','Dort gibt es Glace.','Dort sitzt Tante Birgit.'],2,'warum'],
+  ['Was hat Tante Birgit mitgebracht, damit die Zeit schneller vergeht?','ein Buch über Delfine',['ein Fernglas','einen Fotoapparat','Futter für die Delfine'],2],
+  ['Woran merken die Kinder, dass es so weit ist?','Der Lärm des Schiffsmotors verstummt.',['Der Kapitän ruft laut.','Eine Glocke läutet.','Die Sonne geht unter.'],2],
+  ['Was machen Hanna und Leon, als die anderen Leute drängeln und rufen?','Sie sind ganz still und suchen das Meer ab.',['Sie rufen auch ganz laut.','Sie gehen in die Kabine.','Sie fotografieren die Leute.'],2],
+  ['Was machen die Delfine zuerst?','Sie schwimmen dicht unter der Wasseroberfläche.',['Sie springen sofort hoch.','Sie schwimmen weg.','Sie fressen Fische.'],3],
+  ['Was machen die Leute beim ersten Luftsprung?','Sie klatschen Beifall.',['Sie erschrecken.','Sie werfen Brot ins Wasser.','Sie gehen nach Hause.'],3],
+  ['Was ist für Hanna und Leon das Schönste?','ein kleiner Delfin neben seiner Mutter',['ein riesiger Wal','ein bunter Fisch','der Kapitän am Fenster'],3],
+  ['Woran erkennen die Kinder die Delfinmutter?','Ihre Rückenflosse ist dunkler und stärker gebogen.',['Sie hat einen weissen Fleck.','Sie ist kleiner als die anderen.','Sie hat eine Narbe am Kopf.'],3],
+  ['Was passiert, nachdem der kleine Delfin getaucht ist?','Er kommt lange nicht zurück.',['Er springt aufs Schiff.','Er schwimmt zum Strand.','Er schläft ein.'],3],
+  ['Wie wirkt Mama Delfin, als sie allein auftaucht?','sehr aufgeregt',['ganz ruhig','fröhlich','müde'],3],
+  ['Was machen die anderen Delfine, als der Kleine fehlt?','Sie suchen mit der Mutter.',['Sie schwimmen davon.','Sie springen um die Wette.','Sie jagen Fische.'],3],
+  ['Warum hebt die Delfinmutter den Kopf aus dem Wasser?','Sie will den Menschen etwas sagen.',['Sie will gefüttert werden.','Sie will die Leute nass spritzen.','Sie will sich ausruhen.'],3,'warum'],
+  ['Was macht Kapitän Isidoro?','Er springt ins Meer und taucht.',['Er ruft die Polizei.','Er fährt schnell weg.','Er wirft einen Rettungsring.'],4],
+  ['Wer taucht mit dem Kapitän?','der grosse Delfin mit der besonderen Rückenflosse',['der Schiffsjunge','Tante Birgit','ein Fischer'],4],
+  ['Was ist mit dem kleinen Delfin passiert?','Er ist in ein Fischernetz geraten.',['Ein Hai hat ihn gebissen.','Er hat sich verirrt.','Er ist an den Strand geschwommen.'],4],
+  ['Warum ist Leon wütend auf den Fischer?','Der Fischer denkt nicht an die Delfine.',['Der Fischer hat ihn ausgelacht.','Der Fischer hat sein Velo genommen.','Der Fischer fährt zu schnell.'],4,'warum'],
+  ['Warum geraten vor allem kleine Delfine in Netze?','Sie kennen die Gefahr noch nicht.',['Sie sind zu langsam.','Sie sehen schlecht.','Sie spielen gerne mit Netzen.'],4,'warum'],
+  ['Womit befreit der Kapitän den kleinen Delfin?','mit einem Messer',['mit einer Schere','mit den Zähnen','mit einer Säge'],4],
+  ['Womit deckt Tante Birgit den kleinen Delfin zu?','mit nassen Handtüchern',['mit einer warmen Decke','mit Sand','mit einer Plastikplane'],4],
+  ['Warum bleibt das Blasloch frei?','Sonst kann der Delfin nicht atmen.',['Damit er besser sieht.','Damit er fressen kann.','Damit er besser hört.'],4,'warum'],
+  ['Warum schöpfen die Kinder Wasser über den Delfin?','Seine Haut darf nicht austrocknen.',['Damit er sauber wird.','Damit er Wasser trinken kann.','Damit er schneller schwimmt.'],4,'warum'],
+  ['Womit schöpfen Hanna und Leon das Wasser?','mit grossen Henkelbechern',['mit den Händen','mit einer Giesskanne','mit Suppentellern'],4],
+  ['Wohin fährt die Santa Maria mit dem kleinen Delfin?','zur nächsten Insel',['zurück in den Heimathafen','aufs offene Meer','zu Tante Birgits Haus'],5],
+  ['Was gibt es auf der nächsten Insel?','eine Station für verletzte Delfine',['einen Zoo','ein Schwimmbad','einen Fischmarkt'],5],
+  ['Wann darf der kleine Delfin ins Meer zurück?','wenn er gesund ist',['sofort','nach einem Jahr','nie mehr'],5],
+  ['Was machen die anderen Delfine, als man sie nicht mehr braucht?','Sie schwimmen davon.',['Sie folgen dem Schiff.','Sie springen aufs Deck.','Sie warten beim Felsen.'],5],
+  ['Wer begleitet das Schiff zur nächsten Insel?','Mama Delfin',['ein Fischerboot','ein Hai','ein Schwarm Möwen'],5],
+  ['Was sagen die anderen Leute auf dem Schiff zum Umweg?','Sie sind einverstanden.',['Sie schimpfen.','Sie wollen aussteigen.','Sie lachen den Kapitän aus.'],5],
+  ['Warum braucht es ein Schlauchboot?','Die Station erreicht man nur mit dem Schlauchboot.',['Das Schiff ist kaputt.','Der Kapitän will fischen.','Die Kinder wollen rudern.'],6,'warum'],
+  ['Was passiert in der Delfinstation?','Verletzte und gestrandete Tiere werden behandelt.',['Delfine zeigen Kunststücke für Zuschauer.','Delfine werden verkauft.','Fische werden gefangen.'],6],
+  ['Warum bleibt Mama Delfin an der Seite ihres Babys?','Das Baby braucht ihre Milch.',['Sie will auch zum Tierarzt.','Sie hat Hunger.','Sie mag das Schlauchboot.'],6,'warum'],
+  ['Was macht der Kapitän am Ufer?','Er holt den Tierarzt.',['Er kauft Glace.','Er ruft Tante Birgit an.','Er schläft im Boot.'],6],
+  ['Warum muss Tante Birgit übersetzen?','Der Tierarzt spricht nicht Deutsch.',['Der Tierarzt hört schlecht.','Die Kinder sind zu schüchtern.','Der Kapitän ist heiser.'],6,'warum'],
+  ['Was holt der Tierarzt aus dem schwarzen Koffer?','allerlei blitzende Sachen',['Fische','ein Buch','Spielzeug'],6],
+  ['Wo hat der kleine Delfin eine Wunde?','an der linken Flanke',['am Kopf','an der Schwanzflosse','an der rechten Flosse'],6],
+  ['Wie schlimm sind die Verletzungen?','nur oberflächlich, nicht allzu gefährlich',['sehr gefährlich','ein Knochen ist gebrochen','er ist gar nicht verletzt'],6],
+  ['Was bekommt der kleine Delfin vom Arzt?','eine Spritze und eine heilende Salbe',['einen Gips','Tabletten','einen Verband'],6],
+  ['Was ist besonders an der Salbe?','Sie geht im Wasser nicht ab.',['Sie riecht nach Fisch.','Sie ist blau.','Sie schmeckt süss.'],6],
+  ['Wo lässt Tante Birgit den kleinen Delfin frei?','vom Schlauchboot aus, kurz vor der Santa Maria',['am Strand','im Hafen','in der Delfinstation'],7],
+  ['Was machen Mutter und Kind, als sie sich wiederfinden?','Sie machen gleichzeitig einen Freudensprung.',['Sie schwimmen sofort weg.','Sie kippen das Boot um.','Sie schlafen ein.'],7],
+  ['Wie fühlen sich die vier im Schlauchboot nach dem Abschied?','erleichtert, aber ein wenig traurig',['wütend','gelangweilt','ängstlich'],7],
+  ['Was glaubt Leon nach dem Abschied?','dass sie die Delfine nie wiedersehen',['dass die Delfine morgen kommen','dass der Delfin krank bleibt','dass er Kapitän wird'],7],
+  ['Wann sehen die Kinder die Delfine wieder?','drei Tage später',['am nächsten Morgen','nach einem Jahr','nie mehr'],7],
+  ['Wo sind die Kinder, als die Delfine wieder auftauchen?','auf dem grossen Felsen am Ende der Bucht',['auf der Santa Maria','in der Delfinstation','im Auto'],7],
+  ['Woran erkennen die Kinder die Delfinmutter wieder?','an der dunklen, stark gebogenen Rückenflosse',['an einem Halsband','an ihrer Stimme','an einem weissen Fleck'],7],
+  ['Was zeigen die Delfine vor dem Felsen?','eine richtige Vorstellung mit Sprüngen',['einen grossen Fisch','ein neues Baby','den Weg zum Schiff'],7],
+  ['Warum machen die Delfine vor dem Felsen ihre Sprünge?','Sie wollen sich bedanken.',['Sie wollen Futter.','Sie üben für einen Zirkus.','Sie haben Angst.'],7,'warum'],
+];
+/* [Aussage, stimmt?, Erklärung, Kapitel] */
+const LES_TF = [
+  ['Hanna und Leon haben schon oft frei lebende Delfine gesehen.',false,'Sie haben noch nie frei lebende Delfine gesehen.',1],
+  ['Tante Birgit lebt schon lange auf der Insel.',true,'Sie lebt schon lange dort, nicht weit vom Strand.',1],
+  ['Die Kinder schwimmen zu den Delfinen hinaus.',false,'Sie nehmen ein Schiff, die Santa Maria.',1],
+  ['Kapitän Isidoro ist ein Freund von Tante Birgit.',true,'Tante Birgit sagt, der Kapitän sei ihr Freund.',1],
+  ['Auf dem Schiff ist fast niemand.',false,'Das Deck ist schon gut besetzt.',2],
+  ['Mit dem Delfinbuch vertreiben sie sich die Zeit.',true,'Das Buch erklärt, wie Delfine leben.',2],
+  ['Der kleine Delfin schwimmt neben seiner Mutter.',true,'Er flitzt neben seiner Mutter durchs Wasser.',3],
+  ['Der kleine Delfin kommt nach dem Tauchen sofort zurück.',false,'Die Kinder warten lange vergeblich.',3],
+  ['Der Kapitän springt mit Schuhen und Kleidern ins Meer.',false,'Er zieht Schuhe und Kleider aus und hat nur Badeshorts an.',4],
+  ['Der Kapitän hat schon manchem Delfin das Leben gerettet.',true,'Das erzählt Tante Birgit.',4],
+  ['Ein Hai hat den kleinen Delfin angegriffen.',false,'Er ist in ein Fischernetz geraten.',4],
+  ['Der Kapitän zerschneidet unten im Meer das grosse Netz.',true,'Er tut es mit demselben Messer.',4],
+  ['Tante Birgit deckt auch das Blasloch zu.',false,'Das Blasloch bleibt frei, sonst kann der Delfin nicht atmen.',4],
+  ['Die Haut des Delfins darf austrocknen.',false,'Sie darf auf keinen Fall austrocknen.',4],
+  ['Die Santa Maria fährt sofort zurück in den Heimathafen.',false,'Sie nimmt Kurs auf die nächste Insel.',5],
+  ['Mama Delfin begleitet das Schiff.',true,'Sie schwimmt die ganze Zeit mit.',5],
+  ['Der kleine Delfin wird mit der Zeit ruhiger.',true,'Er wird allmählich ruhiger.',5],
+  ['Die Delfinstation erreicht man nur mit dem Schlauchboot.',true,'Sie liegt auf der anderen Seite der Bucht.',6],
+  ['Hanna und Leon müssen auf dem Schiff bleiben.',false,'Sie dürfen mit, der Kapitän hat nichts dagegen.',6],
+  ['Der Tierarzt spricht Deutsch.',false,'Tante Birgit muss übersetzen.',6],
+  ['Der kleine Delfin ist schwer verletzt.',false,'Die Verletzungen sind nur oberflächlich.',6],
+  ['Die Salbe geht im Wasser nicht ab.',true,'Das erklärt Tante Birgit.',6],
+  ['Der Tierarzt fährt im Schlauchboot mit.',false,'Er bleibt am Ufer und winkt.',6],
+  ['Der kleine Delfin findet seine Mutter wieder.',true,'Sie machen zusammen einen Freudensprung.',7],
+  ['Nach dem Abschied sind alle nur fröhlich.',false,'Sie sind erleichtert, aber auch ein wenig traurig.',7],
+  ['Leon hat recht: Sie sehen die Delfine nie wieder.',false,'Drei Tage später sehen sie die Delfine beim Felsen.',7],
+  ['Die Delfine grüssen die Kinder mit erhobenen Köpfen.',true,'Sie schwimmen dicht vor dem Felsen hin und her.',7],
+];
+/* Wer sagt das? [Satz, Person, Kapitel] */
+const LES_WHO = [
+  ['Von mir aus!','Leon',1],['Nein, wir nehmen ein Schiff!','Tante Birgit',1],
+  ['Ist das Kapitän Isidoro?','Hanna',2],['Ich glaube, jetzt ist es so weit!','Tante Birgit',2],['Schaut mal nach unten!','Tante Birgit',2],
+  ['Sie müssen sich bestimmt erst an uns gewöhnen.','Hanna',3],['Oh, ist der süss!','Hanna',3],['Und so flink!','Leon',3],['Tolles Kerlchen!','Tante Birgit',3],
+  ['Sie ist eine gute Mutter!','Leon',3],['Sie will uns was sagen!','Leon',3],['Sie hat Angst um ihr Kind.','Hanna',3],
+  ['Der blöde Fischer!','Leon',4],['Er hat etwas im Arm!','Leon',4],['Sieht aus wie ein Netz.','Hanna',4],
+  ['Ist er denn verletzt?','Leon',5],['Gleich sind wir da!','Tante Birgit',5],
+  ['Müssen wir unseren kleinen Delfin jetzt da abgeben?','Hanna',6],['Ohne uns wird er sich bestimmt schrecklich allein fühlen.','Leon',6],
+  ['Und zu seiner Mutter!','Hanna',6],['Ich glaube, sie wartet schon.','Leon',6],
+  ['Jetzt sehen wir sie nie wieder!','Leon',7],['Da sind sie!','Hanna',7],['Unsere Delfine!','Leon',7],
+  ['Ich glaube, sie wollen sich bei uns bedanken.','Tante Birgit',7],['Wie haben sie uns bloss gefunden?','Leon',7],['Wahre Freunde suchen und finden sich eben!','Tante Birgit',7],
+];
+const LES_PEOPLE = ['Hanna','Leon','Tante Birgit','Kapitän Isidoro'];
+/* Wörter aus dem Buch [Wort, Bedeutung, [falsch]] */
+const LES_WORD = [
+  ['die Reling','das Geländer am Rand des Schiffes',['die Treppe ins Schiff','der Motor des Schiffes','das Steuerrad']],
+  ['die Steuerkabine','der Raum, von dem aus man das Schiff lenkt',['die Küche des Schiffes','das Schlafzimmer','der Laderaum']],
+  ['das Blasloch','die Öffnung oben am Kopf, durch die der Delfin atmet',['das Ohr des Delfins','der Mund des Delfins','ein Loch im Netz']],
+  ['die Strickleiter','eine Leiter aus Seilen',['eine Leiter aus Metall','eine Rutschbahn','ein Fischernetz']],
+  ['das Schlauchboot','ein Boot aus Gummi, gefüllt mit Luft',['ein Boot aus Holz','ein U-Boot','ein grosses Dampfschiff']],
+  ['die Bucht','ein Stück Meer, das ins Land hineinreicht',['ein hoher Berg','ein Fluss','eine Insel']],
+  ['die Flanke','die Seite des Körpers',['der Kopf','der Rücken','die Schwanzflosse']],
+  ['die Schrammen','kleine Kratzer auf der Haut',['grosse Löcher','Farbflecken','Haare']],
+  ['behutsam','vorsichtig und sanft',['schnell und grob','laut','traurig']],
+  ['der Schützling','jemand, auf den man aufpasst',['ein Fischer','ein Gegner','ein Schiff']],
+  ['der Dampfer','ein Schiff mit Motor',['ein Kochtopf','ein Flugzeug','ein Zug']],
+  ['der Umweg','ein längerer Weg als nötig',['eine Abkürzung','eine Sackgasse','eine Brücke']],
+  ['die Meeresakrobaten','die Delfine, weil sie toll springen',['Fischer auf dem Meer','Taucher','Möwen']],
+  ['Ausschau halten','suchend in die Ferne schauen',['die Augen schliessen','laut rufen','ein Bild malen']],
+  ['vergeblich','ohne Erfolg',['mit viel Glück','sehr schnell','zum Spass']],
+  ['empört','wütend, weil etwas ungerecht ist',['sehr müde','fröhlich','ängstlich']],
+  ['die Beute','das, was der Fischer fängt',['sein Netz','sein Boot','sein Messer']],
+  ['gestrandet','an Land gespült und hilflos',['frisch geboren','sehr schnell','satt']],
+  ['triefend','ganz nass, es tropft',['trocken','heiss','schmutzig']],
+  ['flink','schnell und geschickt',['langsam','müde','dick']],
+  ['ankern','ein Schiff mit dem Anker festmachen',['schnell fahren','umkippen','tauchen']],
+  ['oberflächlich','nur aussen an der Haut, nicht tief',['sehr tief','innen im Bauch','am Knochen']],
+];
+/* Reihenfolge [Titel, [Ereignisse in richtiger Reihenfolge]] */
+const LES_ORDER = [
+  ['Kapitel 1 und 2', ['Die Kinder warten drei Tage auf Delfine.','Sie schwimmen zum Felsen und sehen nur kleine Fische.','Tante Birgit fährt mit ihnen zum Hafen.','Die Santa Maria legt ab.','Tante Birgit liest im Delfinbuch.','Der Schiffsmotor verstummt.']],
+  ['Kapitel 3 und 4', ['Die Delfine schwimmen unter dem Schiff.','Ein Delfin macht einen Luftsprung.','Der kleine Delfin taucht ab.','Mama Delfin taucht allein und aufgeregt auf.','Der Kapitän springt ins Meer.','Der Kapitän bringt den Delfin im Netz an Bord.','Die Kinder schöpfen Wasser über den Delfin.']],
+  ['Kapitel 5 und 6', ['Die Santa Maria fährt zur nächsten Insel.','Das Schiff ankert in einer grossen Bucht.','Alle fahren mit dem Schlauchboot zur Station.','Der Kapitän holt den Tierarzt.','Der Tierarzt untersucht den kleinen Delfin.','Der Delfin bekommt eine Spritze und Salbe.']],
+  ['Kapitel 7', ['Der Kapitän stoppt das Schlauchboot.','Tante Birgit lässt den Delfin ins Wasser gleiten.','Mutter und Kind machen einen Freudensprung.','Die Delfine verschwinden in der Ferne.','Drei Tage später sitzen die Kinder auf dem Felsen.','Die Delfine machen eine Vorstellung.']],
+  ['Die ganze Geschichte', ['Die Kinder warten drei Tage auf Delfine.','Sie fahren mit der Santa Maria aufs Meer.','Der kleine Delfin gerät in ein Netz.','Der Kapitän rettet den kleinen Delfin.','Der Tierarzt behandelt die Wunde.','Der Delfin schwimmt zu seiner Mutter zurück.','Die Delfine bedanken sich beim Felsen.']],
+];
+function buildLesUnit(){
+  const items = [];
+  LES_MC.forEach((m,k) => items.push({id:'l1-mc-'+k, unit:'l1', kind:'lmc', q:m[0], a:m[1], wrong:m[2], ch:m[3], tag:m[4]||'', group:m[3] ? 'k'+m[3] : 'person'}));
+  LES_TF.forEach((t,k) => items.push({id:'l1-tf-'+k, unit:'l1', kind:'ltf', q:t[0], v:t[1], why:t[2], ch:t[3], group:'k'+t[3]}));
+  LES_WHO.forEach((w,k) => items.push({id:'l1-who-'+k, unit:'l1', kind:'lwho', q:w[0], a:w[1], ch:w[2], group:'wer'}));
+  LES_WORD.forEach((w,k) => items.push({id:'l1-w-'+k, unit:'l1', kind:'lword', q:w[0], a:w[1], wrong:w[2], group:'woerter'}));
+  LES_ORDER.forEach((o,k) => items.push({id:'l1-o-'+k, unit:'l1', kind:'lord', q:o[0], ev:o[1], group:'folge'}));
+  return {id:'l1', subject:'Deutsch', name:'Lesen', title:'Wer rettet den kleinen Delfin?', items};
+}
+const isLes = i => i && i.unit === 'l1';
+function lesLabel(i){ return i.kind === 'lord' ? 'Reihenfolge: ' + i.q : i.kind === 'lwho' ? 'Wer sagt: «' + i.q + '»' : i.kind === 'lword' ? 'Wort: ' + i.q : i.q; }
+function lesSolution(i){ return i.kind === 'ltf' ? (i.v ? 'Richtig. ' : 'Falsch. ') + i.why : i.kind === 'lord' ? i.ev.join(' → ') : i.a; }
+function buildLesQ(item, forceType){
+  const b = st(item.id).b, q = {item, retry:false, de:true, les:true, type:item.kind};
+  if(item.kind === 'lmc' || item.kind === 'lword'){ q.opts = shuffle([item.a, ...item.wrong]).map(t => ({t:capFirst(t), ok:t === item.a})); q.sol = capFirst(item.a); }
+  else if(item.kind === 'ltf'){ q.opts = [{t:'Richtig', ok:item.v}, {t:'Falsch', ok:!item.v}]; q.sol = (item.v ? 'Richtig. ' : 'Falsch. ') + item.why; }
+  else if(item.kind === 'lwho'){ q.opts = LES_PEOPLE.map(t => ({t, ok:t === item.a})); q.sol = item.a + ' sagt: «' + item.q + '»'; }
+  else if(item.kind === 'lord'){
+    const n = b >= 3 ? 5 : 4, idx = shuffle(item.ev.map((_,k) => k)).slice(0, n).sort((x,y) => x-y);
+    q.events = idx.map(k => item.ev[k]); q.tiles = shuffle(q.events.map((t,k) => ({t, k}))); q.seq = [];
+    q.sol = q.events.map((t,k) => (k+1) + '. ' + t).join('  ');
+  }
+  return q;
+}
+function renderLesQ(q, opts){
+  const it = q.item, big = t => `<div class="qtext de" style="font-size:clamp(21px,3.6vw,30px)">${esc(t)}</div>`;
+  const hint = it.ch != null ? (it.ch ? 'Kapitel ' + it.ch + ' · ' + LES_CH[it.ch] : 'Personen') : '';
+  let prompt = '', body = '';
+  if(q.type === 'lmc'){ prompt = `<div class="qhint">${esc(hint)}</div>${big(it.q)}`; body = opts('long'); }
+  else if(q.type === 'ltf'){ prompt = `<div class="qhint">Richtig oder falsch? · ${esc(hint)}</div>${big(it.q)}`; body = opts(); }
+  else if(q.type === 'lwho'){ prompt = `<div class="qhint">Wer sagt das? · ${esc(hint)}</div>${big('«' + it.q + '»')}`; body = opts(); }
+  else if(q.type === 'lword'){ prompt = `<div class="qhint">Was bedeutet dieses Wort aus dem Buch?</div>${big(it.q)}`; body = opts('long'); }
+  else if(q.type === 'lord'){
+    prompt = `<div class="qhint">Reihenfolge · ${esc(it.q)}</div>${big('Was passiert zuerst? Tippe der Reihe nach.')}`;
+    body = `<div class="lorder">${q.tiles.map((t,i) => { const pos = q.seq.indexOf(i); let c = 'opt long lo' + (pos >= 0 ? ' sel' : '');
+      if(R.fb) c += q.seq[t.k] === i ? ' ok' : ' no';
+      const num = R.fb ? (t.k+1) : pos >= 0 ? pos+1 : '';
+      return `<button class="${c}" data-a="lord" data-i="${i}" ${R.fb?'disabled':''}><span class="lnum">${num}</span><span>${esc(t.t)}</span></button>`; }).join('')}</div>`;
+  }
+  return {prompt, body};
+}
+
 /* ---------------- Deutsch: Nomen ---------------- */
 const ART = {m:'der', f:'die', n:'das'};
 const GENDER = {m:'männlich', f:'weiblich', n:'sächlich'};
@@ -1080,6 +1279,7 @@ function renderNomCard(it){
 UNITS.push(buildDeUnit());
 UNITS.push(buildNomUnit());
 UNITS.push(buildNmgUnit());
+UNITS.push(buildLesUnit());
 /* ---------------- Mathematik ---------------- */
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -1469,6 +1669,17 @@ GOALS.m1 = [
   {lvl:'Profi', t:'Ich untersuche Zahlen: Eigenschaften, Regeln, welche Zahl nicht passt.', ids:() => byGroup('m1','odd_one','pair_rule','prop'), need:4},
 ];
 GOALS.mx = EXAM_GOALS.map(g => ({lvl:'Grund', t:g[1], ids:() => byGroup('mx', g[0]), need:3}));
+GOALS.l1 = [
+  {lvl:'Grund', t:'Ich kenne die Personen der Geschichte.', ids:() => byGroup('l1','person'), need:2},
+  {lvl:'Grund', t:'Ich verstehe Kapitel 1 und 2: Ferien und Ausflug.', ids:() => byGroup('l1','k1','k2'), need:2},
+  {lvl:'Grund', t:'Ich verstehe Kapitel 3 und 4: Gefahr und Rettung.', ids:() => byGroup('l1','k3','k4'), need:2},
+  {lvl:'Grund', t:'Ich verstehe Kapitel 5 und 6: Delfinstation und Tierarzt.', ids:() => byGroup('l1','k5','k6'), need:2},
+  {lvl:'Grund', t:'Ich verstehe Kapitel 7: Abschied und Wiedersehen.', ids:() => byGroup('l1','k7'), need:2},
+  {lvl:'Grund', t:'Ich bringe die Ereignisse in die richtige Reihenfolge.', ids:() => byGroup('l1','folge'), need:3},
+  {lvl:'Profi', t:'Ich weiss, wer was sagt.', ids:() => byGroup('l1','wer'), need:2},
+  {lvl:'Profi', t:'Ich erkläre, warum etwas passiert.', ids:() => unitById('l1').items.filter(i => i.tag === 'warum').map(i => i.id), need:2},
+  {lvl:'Profi', t:'Ich verstehe schwierige Wörter aus dem Buch.', ids:() => byGroup('l1','woerter'), need:2},
+];
 GOALS.m2 = [
   {lvl:'Grund', t:'Ich erkenne Flächen: Quadrat, Rechteck, Kreis, Dreieck.', ids:() => byGroup('m2','flaeche'), need:2},
   {lvl:'Grund', t:'Ich erkenne Körper: Würfel, Quader, Kugel, Zylinder, Kegel, Pyramide.', ids:() => byGroup('m2','koerper'), need:2},
@@ -1481,6 +1692,7 @@ const DECKS = [
   {id:'en23', subject:'Englisch', label:'Unit 2 + 3', title:'About Me', units:['u2','u3']},
   {id:'d1', subject:'Deutsch', label:'Grammatik', title:'Verben', units:['d1']},
   {id:'d2', subject:'Deutsch', label:'Grammatik', title:'Nomen', units:['d2']},
+  {id:'l1', subject:'Deutsch', label:'Leseverständnis', title:'Kleiner Delfin', units:['l1']},
   {id:'n1', subject:'NMG', label:'Tiere', title:'Delfinarten', units:['n1']},
   {id:'m1', subject:'Mathematik', label:'Zahlenraum', title:'Zahlen bis 1000', units:['m1']},
   {id:'m2', subject:'Mathematik', label:'Geometrie', title:'Raum & Lage', units:['m2']},
@@ -2013,6 +2225,7 @@ function buildQ(item, forceType){
   if(item.kind === 'num') return buildNumQ(forceType);
   if(isDe(item)) return buildDeQ(item, forceType);
   if(isNmg(item)) return buildNmgQ(item, forceType);
+  if(isLes(item)) return buildLesQ(item, forceType);
   if(isNom(item)) return buildNomQ(item, forceType);
   if(isMath(item)) return buildMathQ(item, forceType);
   const b = st(item.id).b; let types;
@@ -2517,7 +2730,7 @@ function renderParents(){
     </div>`).join('')}
   </section>
   <section class="panel"><div class="label">Fehlerwörter</div><h3 style="margin:6px 0 10px">Hier hakt es am meisten</h3>
-    ${errors.length ? `<div class="tbl-wrap"><table><thead><tr><th>Aufgabe</th><th>Lösung</th><th>Fach</th><th>Falsch</th><th>Richtig</th><th>Stufe</th></tr></thead><tbody>${errors.map(i => { const s = st(i.id); return `<tr><td>${esc(isDe(i) ? deLabel(i) : isNmg(i) ? nmgLabel(i) : isNom(i) ? nomLabel(i) : isMath(i) ? (MFAM[i.fam] || i.q || i.shape || i.fam) : i.en)}</td><td>${esc(isDe(i) ? deSolution(i) : isNmg(i) ? nmgSolution(i) : isNom(i) ? nomSolution(i) : isMath(i) ? (i.a || (i.shape ? 'Form erkennen' : 'wird zufällig erzeugt')) : i.de)}</td><td>${unitById(i.unit).subject} · ${unitById(i.unit).name}</td><td class="num">${s.w}</td><td class="num">${s.r}</td><td>${lvl(s.b)}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="note">Noch keine Fehler erfasst. Sobald Ihr Sohn Runden fährt, erscheinen hier die schwierigsten Wörter.</p>'}
+    ${errors.length ? `<div class="tbl-wrap"><table><thead><tr><th>Aufgabe</th><th>Lösung</th><th>Fach</th><th>Falsch</th><th>Richtig</th><th>Stufe</th></tr></thead><tbody>${errors.map(i => { const s = st(i.id); return `<tr><td>${esc(isDe(i) ? deLabel(i) : isNmg(i) ? nmgLabel(i) : isNom(i) ? nomLabel(i) : isMath(i) ? (MFAM[i.fam] || i.q || i.shape || i.fam) : isLes(i) ? lesLabel(i) : i.en)}</td><td>${esc(isDe(i) ? deSolution(i) : isNmg(i) ? nmgSolution(i) : isNom(i) ? nomSolution(i) : isMath(i) ? (i.a || (i.shape ? 'Form erkennen' : 'wird zufällig erzeugt')) : isLes(i) ? lesSolution(i) : i.de)}</td><td>${unitById(i.unit).subject} · ${unitById(i.unit).name}</td><td class="num">${s.w}</td><td class="num">${s.r}</td><td>${lvl(s.b)}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="note">Noch keine Fehler erfasst. Sobald Ihr Sohn Runden fährt, erscheinen hier die schwierigsten Wörter.</p>'}
     <p class="note" style="margin-top:10px">Stufe 0–5: Jede richtige Antwort hebt die Stufe, ein Fehler setzt sie auf 1 zurück. Wörter mit tiefer Stufe kommen häufiger. Ab Stufe 3 tippt er frei statt mit Buchstaben-Kacheln.</p>
   </section>
   <section class="panel"><div class="label">Deutsch · Verben und Nomen</div><h3 style="margin:6px 0 10px">Fertigkeiten</h3>
@@ -2722,6 +2935,10 @@ const A = {
   lpick: el => { const q = R.queue[R.idx]; if(R.fb || !q) return; const k = +el.getAttribute('data-k'); answer(k === q.tk, {pick:k}); },
   blk: el => { const q = R.queue[R.idx]; if(R.fb || !q) return; const t = el.getAttribute('data-t'), d = +el.getAttribute('data-d'); q[t] = Math.max(0, Math.min(9, q[t] + d)); render(); },
   'check-legen': () => { const q = R.queue[R.idx]; if(R.fb || !q) return; answer(q.h*100 + q.z*10 + q.e === q.n); },
+  lord: el => { const q = R.queue[R.idx]; if(R.fb || !q || !q.tiles) return; const i = +el.getAttribute('data-i'), pos = q.seq.indexOf(i);
+    if(pos >= 0) q.seq = q.seq.slice(0, pos); else q.seq.push(i);
+    if(q.seq.length === q.tiles.length) return answer(q.seq.every((ti, k) => q.tiles[ti].k === k));
+    render(); },
   part: el => { const q = R.queue[R.idx]; if(R.fb) return; const k = +el.dataset.k; answer(k === q.item.idx, {pick:k}); },
   kb: el => {
     const inp = document.getElementById('typein'); if(!inp || R.fb) return;
